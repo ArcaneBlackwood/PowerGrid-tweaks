@@ -31,6 +31,9 @@ public class CClient extends ConfigBase {
     public final ConfigBool wireLOD = b(true, "wireLOD", Comments.wireLOD);
     public final ConfigFloat hummingSoundMultiplier = f(1.0f, 0.0f, "hummingSoundMultiplier", Comments.hummingSoundMultiplier);
     public final ConfigFloat generatorSoundMultiplier = f(1.0f, 0.0f, "generatorSoundMultiplier", Comments.generatorSoundMultiplier);
+    public final ConfigFloat generatorSoundMaxCurrent = f(15.0F, 0.0F, "generatorSoundMaxCurrent", Comments.generatorSoundMaxCurrent);
+    public final ConfigFloat generatorSoundCurrentCurve = f(0.4F, 0.0F, "generatorSoundCurrentCurve", Comments.generatorSoundCurrentCurve);
+
 
     @Override
     public String getName() {
@@ -51,5 +54,7 @@ public class CClient extends ConfigBase {
 
         public static final String hummingSoundMultiplier = "Multiplier for all humming ambient sounds";
         public static final String generatorSoundMultiplier = "Multiplier for generator ambient sound";
+        public static final String generatorSoundMaxCurrent = "Output current level for the generator where the volume is at maximum";
+        public static final String generatorSoundCurrentCurve = "The exponent to set the current to volume curve";
     }
 }
