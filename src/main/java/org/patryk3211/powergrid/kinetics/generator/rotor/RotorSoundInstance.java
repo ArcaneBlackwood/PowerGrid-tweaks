@@ -25,6 +25,7 @@ import net.minecraft.util.Mth;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.patryk3211.powergrid.collections.ModdedConfigs;
 import org.patryk3211.powergrid.collections.ModdedSoundEvents;
+import org.patryk3211.powergrid.kinetics.generator.inductionrotor.CommutatorBlockEntity;
 
 @Environment(EnvType.CLIENT)
 public class RotorSoundInstance extends AbstractTickableSoundInstance {
@@ -57,7 +58,10 @@ public class RotorSoundInstance extends AbstractTickableSoundInstance {
             if(player == null)
                 return;
             var playerPos = player.blockPosition();
+            MutableObject<CommutatorBlockEntity> commutator = new MutableObject();
             behaviour.forEachSegment(segment -> {
+                if (segment.blockEntity instanceof CommutatorBlockEntity be) 
+                    commutator.setValue(be);
                 if(closest.getValue() == null) {
                     closest.setValue(segment.getPos());
                 } else {
@@ -68,6 +72,13 @@ public class RotorSoundInstance extends AbstractTickableSoundInstance {
                     }
                 }
             });
+            float currentScaled = 0.0F;
+            if (commutator.getValue() != null) {
+                currentScaled = Math.abs(((CommutatorBlockEntity)commutator.getValue()).getCurrent()) / ModdedConfigs.client().generatorSoundMaxCurrent.getF();
+            }
+
+            if (currentScaled > 1.0F) currentScaled = 1.0F;
+
             if(closest.getValue() != null) {
                 var pos = closest.getValue().getCenter();
                 this.x = pos.x;
@@ -76,13 +87,14 @@ public class RotorSoundInstance extends AbstractTickableSoundInstance {
             }
 
             var velocity = Math.abs(behaviour.getAngularVelocity());
-            var pitch = velocity / (behaviour.getMaxRotationSpeed() / 2f);
-            if(velocity < 32) {
-                this.volume = 0.0f;
-                stop();
+            var pitch = velocity * 4.0f / behaviour.getMaxRotationSpeed();
+            if (velocity < 32.0F) {
+                this.volume = 0.0F;
+                this.stop();
             } else {
-                var volume = (velocity / 128) * ModdedConfigs.client().generatorSoundMultiplier.getF();
-                this.volume = Mth.clamp(volume, 0, 1);
+                float volume = (float)Math.pow((double)currentScaled, (double)ModdedConfigs.client().generatorSoundCurrentCurve.getF());
+                float velocityScale = velocity / 64.0F * ModdedConfigs.client().generatorSoundMultiplier.getF();
+                this.volume = Mth.clamp(volume, 0.0F, 1.0F) * Mth.clamp(velocityScale, 0.0F, 1.0F);
             }
             this.pitch = Mth.clamp(pitch, 0.5f, 2f);
         }
