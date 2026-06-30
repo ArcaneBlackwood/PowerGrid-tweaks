@@ -74,6 +74,12 @@ public class ModdedItems {
                     false, false))
             .tag(ModdedTags.Item.WIRES.tag, ModdedTags.Item.LIGHT_WIRES.tag, wires("gold"))
             .register();
+    public static final ItemEntry<WireItem> HEAVY_GOLDEN_WIRE = REGISTRATE.item("heavy_golden_wire", WireItem::new)
+            .transform(WireItem.properties(3.75E-4F, 6.0F, 0.5F, 0.8F, 1280.0F,
+                PowerGrid.texture("special/golden_wire"), 1.08F, 1.8F, 0.175F,
+                false, false))
+            .tag(ModdedTags.Item.WIRES.tag, ModdedTags.Item.LIGHT_WIRES.tag, wires("heavy_gold"))
+            .register();
     public static final ItemEntry<WireItem> INSULATED_COPPER_WIRE = REGISTRATE.item("insulated_copper_wire", WireItem::new)
             .transform(WireItem.properties(0.0015f, 16, 0.5f, 1.2f, 70,
                     PowerGrid.texture("special/insulated_wire"), 1.01f, 1.2f, 0.0625f,
