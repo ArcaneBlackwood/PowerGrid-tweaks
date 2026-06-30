@@ -1,3 +1,10 @@
+# Tweak notes
+This is pretty much my first time modding Minecraft/Neoforge and working with gradle.  Hopefully my code is up to the expectations, still learning.  But if not, any advice is appriciated!
+
+For the original devs, feel free to use any of my modifications without credit/permission.
+
+Also Im most easily contactable on Discord at `arcaneblackwood`
+
 <p align="center">
     <img src="./src/main/resources/assets/powergrid/icon.png" alt="Logo" width="200">
 </p>
