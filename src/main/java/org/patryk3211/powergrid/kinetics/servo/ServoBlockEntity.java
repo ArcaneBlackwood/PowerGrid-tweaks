@@ -101,7 +101,8 @@ public class ServoBlockEntity extends GeneratingKineticBlockEntity implements IE
     public void tick() {
         if(!level.isClientSide || isVirtual()) {
             applyPower(coil);
-            avgSpeed += (float) calculateSpeed(coil.power(), torque());
+            var voltage = coil.potentialDifference();
+            avgSpeed += (float) calculateSpeed(voltage*voltage/resistance("on"), torque());
             avgTarget += (float) control.potentialDifference();
         }
         super.tick();
@@ -120,11 +121,15 @@ public class ServoBlockEntity extends GeneratingKineticBlockEntity implements IE
                 notifyUpdate();
             }
 
-            if (generatedSpeed != 0) {
-                coil.setResistance(resistance("on"));
-            } else {
-                coil.setResistance(resistance("idle"));
-            }
+            var resBase = resistance("on");
+            var resNoLoad = resistance("idle");
+            var load = capacity < 1 ? 0 : (
+                stress * Math.abs(speed) / (capacity * maxSpeed)
+            );
+            if (load < 0) load = 0;
+            if (load > 1 || !Double.isFinite(load)) load = 1;
+            var res = (resBase * (resBase + resNoLoad)) / (resBase + resNoLoad * load);
+            coil.setResistance(res);
 
             currentAngle += generatedSpeed / 60.0f * dT * 360f;
         }
