@@ -141,7 +141,16 @@ public class ConstantSpeedMotorBlockEntity extends GeneratingKineticBlockEntity 
 
         if(!level.isClientSide || isVirtual()) {
             applyPower(coil);
-            avgSpeed += (float) (calculateSpeed(coil.power(), torque()) * Math.signum(coil.current()));
+            var voltage = coil.potentialDifference();
+            avgSpeed += (float) (calculateSpeed(voltage*voltage/resistance("on"), torque()) * Math.signum(coil.current()));
+
+            var resBase = resistance("on");
+            var resNoLoad = resistance("idle");
+            var load = capacity < 1 ? 0 : stress / capacity;
+            if (load < 0) load = 0;
+            if (load > 1 || !Double.isFinite(load)) load = 1;
+            var res = (resBase * (resBase + resNoLoad)) / (resBase + resNoLoad * load);
+            coil.setResistance(res); //Relation between current and load is linear
         }
         super.tick();
     }
@@ -175,7 +184,7 @@ public class ConstantSpeedMotorBlockEntity extends GeneratingKineticBlockEntity 
     @Override
     public void buildCircuit(CircuitBuilder builder) {
         builder.setTerminalCount(2);
-        coil = builder.connect(resistance(), builder.terminalNode(0), builder.terminalNode(1));
+        coil = builder.connect(resistance("idle"), builder.terminalNode(0), builder.terminalNode(1));
     }
 
     public static class Box extends CenteredSideValueBoxTransform {

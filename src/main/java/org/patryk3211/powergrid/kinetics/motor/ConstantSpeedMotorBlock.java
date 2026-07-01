@@ -126,10 +126,10 @@ public class ConstantSpeedMotorBlock extends ElectricKineticBlock implements IBE
 
     @Override
     public void appendProperties(ItemStack stack, Player player, List<Component> tooltip) {
-        Resistance.series(resistance(), player, tooltip);
+        Resistance.series(resistance("idle"), player, tooltip);
         var torque = BlockStressValues.getCapacity(this) * ModdedConfigs.server().kinetics.torqueForStress.getF();
         var maxPower = 256 * torque / CONVERSION_CONSTANT;
-        Voltage.max((int) Math.sqrt(maxPower * resistance()), player, tooltip);
+        Voltage.max((int) Math.sqrt(maxPower * resistance("on")), player, tooltip);
     }
 
     @Override
