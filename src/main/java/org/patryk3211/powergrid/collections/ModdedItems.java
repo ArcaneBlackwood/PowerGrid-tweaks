@@ -37,6 +37,8 @@ import org.patryk3211.powergrid.electricity.wire.WireItem;
 import org.patryk3211.powergrid.electricity.wire.powercord.CordItem;
 import org.patryk3211.powergrid.equipment.ZincArmorMaterial;
 import org.patryk3211.powergrid.equipment.baton.ElectroBatonItem;
+import org.patryk3211.powergrid.equipment.drill.DrillItem;
+import org.patryk3211.powergrid.equipment.drill.DrillItemRenderer;
 import org.patryk3211.powergrid.equipment.multimeter.MultimeterItem;
 import org.patryk3211.powergrid.equipment.multimeter.MultimeterItemRenderer;
 import org.patryk3211.powergrid.equipment.portablebattery.PortableBatteryItem;
@@ -214,6 +216,11 @@ public class ModdedItems {
     public static final ItemEntry<ElectroBatonItem> ELECTROBATON = REGISTRATE.item("electrobaton", ElectroBatonItem::new)
             .model(itemWithParent("item/electrobaton/item"))
             .lang("Electro-Baton")
+            .register();
+
+    public static final ItemEntry<DrillItem> PORTABLE_DRILL = REGISTRATE.item("portable_drill", DrillItem::new)
+            .transform(customRenderer(() -> DrillItemRenderer::new))
+            .model(itemWithParent("item/drill/item"))
             .register();
 
     public static final ItemEntry<BacktankItem.BacktankBlockItem> PORTABLE_BATTERY_PLACEABLE = REGISTRATE.item("portable_battery_placeable",

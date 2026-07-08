@@ -77,8 +77,9 @@ public class ConstantSpeedMotorBlockEntity extends GeneratingKineticBlockEntity 
         var maxPower = maxRPM() * torque() / CONVERSION_CONSTANT;
         var baseFactor = ThermalBehaviour.dissipationFactor(maxPower, 150);
         thermalBehaviour = ThermalBehaviour.simple(this, 3.5f, baseFactor);
-        if(thermalBehaviour != null)
+        if(thermalBehaviour != null) {
             behaviours.add(thermalBehaviour);
+        }
 
         Integer max = AllConfigs.server().kinetics.maxRotationSpeed.get();
         scrollValue = new SpeedScrollValueBehaviour(Lang.translateDirect("devices.motor.speed"), this, new Box());

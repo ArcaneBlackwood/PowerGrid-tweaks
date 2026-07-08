@@ -20,9 +20,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 import net.neoforged.neoforge.event.level.ChunkTicketLevelUpdatedEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.patryk3211.powergrid.electricity.GlobalElectricNetworks;
 import org.patryk3211.powergrid.electricity.base.ElectricBehaviour;
 import org.patryk3211.powergrid.electricity.wire.BaseWireEntity;
+import org.patryk3211.powergrid.equipment.drill.DrillItem;
 
 public class ForgeEvents {
     @SubscribeEvent
@@ -48,5 +50,15 @@ public class ForgeEvents {
         if(global == null)
             return;
         global.chunkLoaded(event.getChunk().getPos());
+    }
+
+    @SubscribeEvent
+    public static void leftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        if(event.getLevel().isClientSide)
+            return;
+        var stack = event.getItemStack();
+        if(stack.getItem() instanceof DrillItem drill) {
+            drill.leftClickEvent(event.getLevel(), event.getPos(), event.getItemStack(), event.getEntity(), event.getAction() != PlayerInteractEvent.LeftClickBlock.Action.START);
+        }
     }
 }

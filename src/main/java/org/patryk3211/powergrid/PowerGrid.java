@@ -53,6 +53,7 @@ import org.patryk3211.powergrid.electricity.sim.ElectricalNetwork;
 import org.patryk3211.powergrid.electricity.sim.solver.NativeMNA;
 import org.patryk3211.powergrid.electricity.solarpanel.SolarPanelBlock;
 import org.patryk3211.powergrid.electricity.wire.WireItem;
+import org.patryk3211.powergrid.equipment.BoostRecipe;
 import org.patryk3211.powergrid.equipment.thunder.LightningRodMovementBehaviour;
 import org.patryk3211.powergrid.equipment.portablebattery.PortableBatteryItem;
 import org.patryk3211.powergrid.kinetics.punchcard.PunchCardReaderBlockEntity;
@@ -112,11 +113,6 @@ public class PowerGrid {
 		InteractionEvent.RIGHT_CLICK_BLOCK.register(WireItem::useOn);
 		InteractionEvent.RIGHT_CLICK_ITEM.register(WireItem::use);
 		LifecycleEvent.SETUP.register(PowerGrid::setup);
-	}
-
-	private static void setup() {
-		RedstoneConverterRegistry.init();
-		TickEvent.PLAYER_PRE.register(PowerGrid::playerPre);
 	}
 
 	private static void playerQuit(ServerPlayer player) {
@@ -183,6 +179,11 @@ public class PowerGrid {
 		registerBlockMovementChecks();
 	}
 
+	private static void setup() {
+		RedstoneConverterRegistry.init();
+		TickEvent.PLAYER_PRE.register(PowerGrid::playerPre);
+	}
+
 	public static ResourceLocation asResource(String path) {
 		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
 	}
@@ -202,6 +203,8 @@ public class PowerGrid {
 		RECIPE_TYPES.register(magnetizing.getId(), magnetizing::getType);
 
 		RECIPE_SERIALIZERS.register("crafting_special_string_light_cord", () -> StringLightCordRecipe.SERIALIZER);
+
+		RECIPE_SERIALIZERS.register("boost_recipe", () -> BoostRecipe.SERIALIZER);
 	}
 
 	public static void registerBlockMovementChecks(){

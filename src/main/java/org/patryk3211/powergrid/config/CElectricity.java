@@ -52,10 +52,6 @@ public class CElectricity extends ConfigBase {
     public final ConfigInt carbonPileMaxHeight = i(5, 1, "carbonPileMaxHeight", Comments.carbonPileMaxHeight);
     public final ConfigFloat carbonPileGain = f(10, 0, "carbonPileGain", Comments.carbonPileGain);
 
-    public final ConfigFloat multimeterDistance = f(5, 1, "multimeterDistance", Comments.multimeterDistance);
-    public final ConfigFloat multimeterVoltage = f(500, 1, "multimeterVoltage", Comments.multimeterVoltage);
-    public final ConfigFloat multimeterCurrent = f(50, 1, "multimeterCurrent", Comments.multimeterCurrent);
-
     public final ConfigFloat smallCoreAl = f(1.5f, 0, "smallCoreAl", Comments.smallCoreAl);
     public final ConfigFloat smallCoreK = f(0.9999f, 0, 1, "smallCoreK", Comments.smallCoreK);
     public final ConfigFloat mediumCoreAl = f(10.0f, 0, "mediumCoreAl", Comments.mediumCoreAl);
@@ -114,10 +110,6 @@ public class CElectricity extends ConfigBase {
 
         public static final String carbonPileMaxHeight = "Maximum block height of the carbon pile structure";
         public static final String carbonPileGain = "Carbon pile \"gain\", controls how much the coil current affects the resistance";
-
-        public static final String multimeterDistance = "Max multimeter distance";
-        public static final String multimeterVoltage = "Max multimeter voltage";
-        public static final String multimeterCurrent = "Max multimeter current";
 
         public static final String smallCoreAl = "Al parameter of small transformer core (affects resistance per turn)";
         public static final String smallCoreK = "K parameter of small transformer core (affects stray resistance)";

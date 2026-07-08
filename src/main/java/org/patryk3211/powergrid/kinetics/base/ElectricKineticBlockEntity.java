@@ -61,8 +61,9 @@ public abstract class ElectricKineticBlockEntity extends KineticBlockEntity impl
         behaviours.add(electricBehaviour);
 
         thermalBehaviour = specifyThermalBehaviour();
-        if(thermalBehaviour != null)
+        if(thermalBehaviour != null) {
             behaviours.add(thermalBehaviour);
+        }
     }
 
     @Nullable

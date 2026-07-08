@@ -73,8 +73,6 @@ public class ElectricMotorBlockEntity extends GeneratingKineticBlockEntity imple
         var maxPower = maxRPM() * torque() / CONVERSION_CONSTANT;
         var baseFactor = ThermalBehaviour.dissipationFactor(maxPower, 150);
         thermalBehaviour = ThermalBehaviour.simple(this, 3.5f, baseFactor);
-        if(thermalBehaviour != null)
-            behaviours.add(thermalBehaviour);
     }
 
     protected void applyPower(AbstractElectricWire wire) {

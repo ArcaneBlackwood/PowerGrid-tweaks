@@ -67,7 +67,7 @@ public class FEInverterBlockEntity extends ElectricBlockEntity {
 
     @Override
     protected void read(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
-        super.write(tag, registries, clientPacket);
+        super.read(tag, registries, clientPacket);
         control.setVoltage(tag.getFloat("ControlVoltage"));
         prevThrottling = tag.getFloat("PrevThrottle");
     }

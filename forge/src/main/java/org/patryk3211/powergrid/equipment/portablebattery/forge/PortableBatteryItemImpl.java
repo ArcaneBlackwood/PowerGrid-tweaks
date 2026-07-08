@@ -18,7 +18,7 @@ public class PortableBatteryItemImpl {
         int energyDrain = heldEnergy.receiveEnergy(maxEnergyDrain, true);
         if (energyDrain <= 0) return;
 
-        int available = BatteryUtils.tryDrawEnergy(batteryStack, energyDrain);
+        int available = BatteryUtils.drawEnergyLimit(batteryStack, energyDrain);
         if (available <= 0) return;
 
         int accepted = heldEnergy.receiveEnergy(available, false);

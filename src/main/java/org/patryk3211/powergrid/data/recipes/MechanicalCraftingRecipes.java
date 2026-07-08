@@ -92,7 +92,7 @@ public class MechanicalCraftingRecipes extends MechanicalCraftingRecipeGen {
 
     ELECTROZAPPER = create(ModdedItems.ELECTROZAPPER::get)
             .recipe(b -> b
-                    .key('G', ModdedItems.ELECTRICAL_GIZMO)
+                    .key('G', electricalGizmo())
                     .key('Z', zincIngot())
                     .key('C', copperCoil())
                     .key('N', copperNugget())
@@ -104,7 +104,7 @@ public class MechanicalCraftingRecipes extends MechanicalCraftingRecipeGen {
 
     ELECTROBATON = create(ModdedItems.ELECTROBATON::get)
             .recipe(b -> b
-                    .key('G', ModdedItems.ELECTRICAL_GIZMO)
+                    .key('G', electricalGizmo())
                     .key('Z', zincIngot())
                     .key('A', andesiteAlloy())
                     .key('C', copperCoil())
@@ -113,6 +113,19 @@ public class MechanicalCraftingRecipes extends MechanicalCraftingRecipeGen {
                     .patternLine("Z")
                     .patternLine("Z")
                     .patternLine("A")
+            ),
+
+    PORTABLE_DRILL = create(ModdedItems.PORTABLE_DRILL::get)
+            .recipe(b -> b
+                    .key('A', andesiteAlloy())
+                    .key('D', diamond())
+                    .key('P', precisionMechanism())
+                    .key('G', electricalGizmo())
+                    .key('Z', zincSheet())
+                    .key('z', zincIngot())
+                    .patternLine(" A ZA")
+                    .patternLine("ADPGz")
+                    .patternLine(" A   ")
             ),
 
     BASIN_HEATER = create(ModdedBlocks.BASIN_HEATER::get)

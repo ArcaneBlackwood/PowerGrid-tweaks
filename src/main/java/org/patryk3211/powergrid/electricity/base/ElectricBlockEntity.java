@@ -51,8 +51,9 @@ public abstract class ElectricBlockEntity extends SmartBlockEntity implements IE
         behaviours.add(electricBehaviour);
 
         thermalBehaviour = specifyThermalBehaviour();
-        if(thermalBehaviour != null)
+        if(thermalBehaviour != null) {
             behaviours.add(thermalBehaviour);
+        }
     }
 
     @Nullable

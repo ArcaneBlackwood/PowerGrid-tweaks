@@ -17,6 +17,7 @@ package org.patryk3211.powergrid.electricity.transformer;
 
 import com.simibubi.create.api.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
+import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
@@ -71,6 +72,11 @@ public abstract class TransformerBlockEntity extends ElectricBlockEntity impleme
 
     public abstract double coreAl();
     public abstract double couplingFactor();
+
+    @Override
+    public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
+        super.addBehaviours(behaviours);
+    }
 
     @Override
     public void tick() {
