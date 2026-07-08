@@ -2,57 +2,51 @@ package org.patryk3211.powergrid.electricity.febridge.forge;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.patryk3211.powergrid.electricity.febridge.FEInverterBlock;
 import org.patryk3211.powergrid.electricity.febridge.FEInverterBlockEntity;
 
 public class FEInverterBlockEntityImpl extends FEInverterBlockEntity {
-    private final LazyOptional<InverterFEStorage> storage = LazyOptional.of(InverterFEStorage::new);
+    private final InverterFEStorage storage = new InverterFEStorage();
 
     public FEInverterBlockEntityImpl(BlockEntityType<?> type, BlockPos pos, BlockState state) {
         super(type, pos, state);
     }
 
+    public IEnergyStorage getEnergyStorage() {
+        return storage;
+    }
+
     @Override
     protected void useEnergy(int amount) {
-        storage.ifPresent(handler -> {
-            handler.energy -= amount;
-            if(handler.energy < 0)
-                handler.energy = 0;
-            setChanged();
-        });
+        storage.energy -= amount;
+        if(storage.energy < 0)
+            storage.energy = 0;
+        setChanged();
     }
 
     @Override
     protected int storedEnergy() {
-        return storage.map(handler -> handler.energy).orElse(0);
+        return storage.energy;
     }
 
     @Override
-    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if(cap == ForgeCapabilities.ENERGY && side == getBlockState().getValue(FEInverterBlock.FACING))
-            return storage.cast();
-        return super.getCapability(cap, side);
+    protected void write(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
+        super.write(tag, registries, clientPacket);
+        tag.putInt("Energy", storage.energy);
     }
 
     @Override
-    protected void write(CompoundTag tag, boolean clientPacket) {
-        super.write(tag, clientPacket);
-        storage.ifPresent(handler -> tag.putInt("Energy", handler.energy));
-    }
-
-    @Override
-    protected void read(CompoundTag tag, boolean clientPacket) {
-        super.read(tag, clientPacket);
-        storage.ifPresent(handler -> handler.energy = tag.getInt("Energy"));
+    protected void read(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
+        super.read(tag, registries, clientPacket);
+        storage.energy = tag.getInt("Energy");
     }
 
     public class InverterFEStorage implements IEnergyStorage {

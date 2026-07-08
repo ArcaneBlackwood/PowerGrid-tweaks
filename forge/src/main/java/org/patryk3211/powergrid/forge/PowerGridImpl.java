@@ -67,6 +67,7 @@ import org.patryk3211.powergrid.data.EntityTagProvider;
 import org.patryk3211.powergrid.data.ItemTagProvider;
 import org.patryk3211.powergrid.data.recipe.forge.MixingRecipes;
 import org.patryk3211.powergrid.data.recipes.*;
+import org.patryk3211.powergrid.electricity.febridge.FEInverterBlock;
 import org.patryk3211.powergrid.electricity.febridge.FEInverterBlockEntity;
 import org.patryk3211.powergrid.electricity.febridge.forge.FEInverterBlockEntityImpl;
 import org.patryk3211.powergrid.electricity.wire.registry.WireItemEntry;
@@ -237,6 +238,15 @@ public class PowerGridImpl {
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, ModdedBlockEntities.PUNCH_CARD_READER.get(),
                 (be, side) -> ((PunchCardReaderBlockEntityImpl) be).getItemHandler(side));
+        event.registerBlockEntity(
+            Capabilities.EnergyStorage.BLOCK,
+            ModdedBlockEntities.FE_INVERTER.get(),
+            (blockEntity, side) -> {
+                if (side != blockEntity.getBlockState().getValue(FEInverterBlock.FACING))
+                    return null;
+                return ((FEInverterBlockEntityImpl) blockEntity).getEnergyStorage();
+            }
+        );
     }
 
     @SubscribeEvent
