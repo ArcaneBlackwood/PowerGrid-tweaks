@@ -1,5 +1,4 @@
 {
-  "replace": false,
   "values": [
     "powergrid:battery",
     "powergrid:conductive_casing",

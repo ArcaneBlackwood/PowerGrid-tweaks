@@ -1,5 +1,4 @@
 {
-  "replace": false,
   "values": [
     "powergrid:plotter",
     "powergrid:generator_clutch",
