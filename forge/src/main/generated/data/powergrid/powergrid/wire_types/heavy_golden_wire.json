@@ -5,9 +5,9 @@
   "itemsPerMeter": 0.5,
   "maximumCurrent": 1280.0,
   "maximumLength": 6.0,
-  "resistancePerItem": 0.000375,
+  "resistancePerItem": 3.75E-4,
   "texture": "powergrid:textures/special/golden_wire.png",
   "thermalMass": 0.8,
   "verticalCoefficient": 1.8,
-  "wireThickness": 0.1750
+  "wireThickness": 0.175
 }

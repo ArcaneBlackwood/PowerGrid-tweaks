@@ -238,15 +238,8 @@ public class PowerGridImpl {
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, ModdedBlockEntities.PUNCH_CARD_READER.get(),
                 (be, side) -> ((PunchCardReaderBlockEntityImpl) be).getItemHandler(side));
-        event.registerBlockEntity(
-            Capabilities.EnergyStorage.BLOCK,
-            ModdedBlockEntities.FE_INVERTER.get(),
-            (blockEntity, side) -> {
-                if (side != blockEntity.getBlockState().getValue(FEInverterBlock.FACING))
-                    return null;
-                return ((FEInverterBlockEntityImpl) blockEntity).getEnergyStorage();
-            }
-        );
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, ModdedBlockEntities.FE_INVERTER.get(),
+                (be, side) -> ((FEInverterBlockEntityImpl) be).getEnergyStorage(side));
     }
 
     @SubscribeEvent

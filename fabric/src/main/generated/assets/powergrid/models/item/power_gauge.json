@@ -1,6 +1,0 @@
-{
-  "parent": "powergrid:block/gauge/item_power",
-  "textures": {
-    "2": "powergrid:block/conductive_gauge"
-  }
-}

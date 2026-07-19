@@ -60,7 +60,7 @@ public class FEInverterBlockEntity extends ElectricBlockEntity {
 
     @Override
     protected void write(CompoundTag tag, HolderLookup.Provider registries, boolean clientPacket) {
-        super.read(tag, registries, clientPacket);
+        super.write(tag, registries, clientPacket);
         tag.putFloat("ControlVoltage", (float) control.capacitorVoltage());
         tag.putFloat("PrevThrottle", prevThrottling);
     }

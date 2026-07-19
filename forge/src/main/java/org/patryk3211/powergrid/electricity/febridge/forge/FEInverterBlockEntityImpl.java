@@ -9,6 +9,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.NotNull;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.Nullable;
 import org.patryk3211.powergrid.electricity.febridge.FEInverterBlock;
 import org.patryk3211.powergrid.electricity.febridge.FEInverterBlockEntity;
@@ -35,6 +36,12 @@ public class FEInverterBlockEntityImpl extends FEInverterBlockEntity {
     @Override
     protected int storedEnergy() {
         return storage.energy;
+    }
+
+    public @Nullable IEnergyStorage getEnergyStorage(Direction side) {
+        if(side != getBlockState().getValue(FEInverterBlock.FACING))
+            return null;
+        return storage;
     }
 
     @Override
