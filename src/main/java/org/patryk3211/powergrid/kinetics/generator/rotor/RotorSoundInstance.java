@@ -87,7 +87,7 @@ public class RotorSoundInstance extends AbstractTickableSoundInstance {
             }
 
             var velocity = Math.abs(behaviour.getAngularVelocity());
-            var pitch = velocity * 4.0f / behaviour.getMaxRotationSpeed();
+            var pitch = velocity * 2.0f / behaviour.getMaxRotationSpeed();
             if (velocity < 32.0F) {
                 this.volume = 0.0F;
                 this.stop();
