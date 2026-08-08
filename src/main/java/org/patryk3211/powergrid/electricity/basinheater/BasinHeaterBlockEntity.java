@@ -42,14 +42,14 @@ public class BasinHeaterBlockEntity extends ElectricBlockEntity {
     public void setState(HeatLevel newState) {
         assert level != null;
         if(state != newState) {
-            state = newState;
+            state = newState; //BlazeBurnerBlock.
             level.setBlockAndUpdate(worldPosition, getBlockState().setValue(BasinHeaterBlock.HEAT_LEVEL, state));
         }
     }
 
     public static float power() {
         // 16384 SU is what the heater outputs if it's used to power a steam engine
-        return 256 * 64 * ModdedConfigs.server().kinetics.torqueForStress.getF() / CONVERSION_CONSTANT;
+        return 256 * 64 * ModdedConfigs.server().kinetics.torqueForStress.getF() / CONVERSION_CONSTANT * ModdedConfigs.server().electricity.basinHeaterEnergyScale.getF();
     }
 
     public static float minPower() {
