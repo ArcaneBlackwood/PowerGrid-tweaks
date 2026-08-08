@@ -276,7 +276,9 @@ public class RotorBehaviour extends SegmentedBehaviour<RotorBehaviour> implement
                     float force = ((Kp * deltaT) + (Kd * deltaAV)) * 20f * inertia;
                     force = Math.min(Math.abs(force), maxForce) * Math.signum(target);
                     angularVelocity += force / 20f / inertia;
-                    segment.forceSupplier.receiveUsedForce(Math.abs(force / maxForce));
+                    float percent = Math.abs(force / maxForce);
+                    if (percent < 0f || Float.isNaN(percent)) percent = 0f;
+                    segment.forceSupplier.receiveUsedForce(percent);
                     totalForce += force;
 
                     power = force * getAngularVelocityRadians();
