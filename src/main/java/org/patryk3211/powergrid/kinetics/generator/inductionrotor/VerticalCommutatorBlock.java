@@ -43,14 +43,21 @@ import org.patryk3211.powergrid.electricity.base.*;
 import org.patryk3211.powergrid.electricity.base.terminals.BlockStateTerminalCollection;
 import org.patryk3211.powergrid.kinetics.generator.rotor.AbstractRotorBlock;
 
-public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<CommutatorBlockEntity>, IElectric, IBrushPlacement {
+public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<CommutatorBlockEntity>, ICommutatorBlock {
     public static final DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty UP = BlockStateProperties.UP;
 
     private final BlockStateTerminalCollection terminals;
+    private final BlockStateTerminalCollection terminalsFlipped;
     private final ImmutableMap<BlockState, VoxelShape> outlines;
 
     private static final TerminalBoundingBox[] TERMINALS_HORIZONTAL = new TerminalBoundingBox[] {
+            new TerminalBoundingBox(IDecoratedTerminal.POSITIVE, 0, 14, 6, 3, 16, 9)
+                    .withColor(IDecoratedTerminal.RED),
+            new TerminalBoundingBox(IDecoratedTerminal.NEGATIVE, 13, 14, 7, 16, 16, 10)
+                    .withColor(IDecoratedTerminal.BLUE)
+    };
+    private static final TerminalBoundingBox[] TERMINALS_HORIZONTAL_FLIPPED = new TerminalBoundingBox[] {
             new TerminalBoundingBox(IDecoratedTerminal.POSITIVE, 0, 14, 6, 3, 16, 9)
                     .withColor(IDecoratedTerminal.RED),
             new TerminalBoundingBox(IDecoratedTerminal.NEGATIVE, 13, 14, 7, 16, 16, 10)
@@ -83,6 +90,13 @@ public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<C
                     return (up ? shaperUp : shaperDown).get(axis);
                 })
                 .build();
+        terminalsFlipped = BlockStateTerminalCollection.builder(this)
+                .forAllStatesExcept(state -> {
+                    var facing = state.getValue(HORIZONTAL_FACING);
+                    return BlockStateTerminalCollection.each(TERMINALS_HORIZONTAL_FLIPPED, terminal -> terminal
+                            .rotateAroundY((int) facing.toYRot() - 180));
+                })
+                .build();
         outlines = getShapeForEachState(terminals.shapeMapper());
     }
 
@@ -107,13 +121,10 @@ public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<C
     }
 
     @Override
-    public int terminalCount() {
-        return 2;
-    }
-
-    @Override
-    public ITerminalPlacement terminal(BlockState state, int index) {
-        return terminals.get(state, index);
+    public ITerminalPlacement terminal(BlockState state, int index, boolean flip) {
+        if (flip)
+            return terminals.get(state, index);
+        return terminalsFlipped.get(state, index);
     }
 
     @Override

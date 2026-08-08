@@ -15,10 +15,12 @@
  */
 package org.patryk3211.powergrid.kinetics.generator.inductionrotor;
 
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.block.state.BlockState;
+import org.patryk3211.powergrid.electricity.base.ITerminalPlacement;
 
-public interface IBrushPlacement {
+public interface ICommutatorBlock {
+    ITerminalPlacement terminal(BlockState state, int index, boolean flip);
     Vec3 brushOffset(BlockState state);
     Vec3 sparkVelocity(BlockState state, float angularVelocity);
 }

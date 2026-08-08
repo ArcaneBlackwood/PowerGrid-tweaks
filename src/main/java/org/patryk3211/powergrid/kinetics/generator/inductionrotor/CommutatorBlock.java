@@ -46,11 +46,11 @@ import org.patryk3211.powergrid.kinetics.generator.rotor.AbstractRotorBlock;
 import org.patryk3211.powergrid.utility.Directions;
 
 @MethodsReturnNonnullByDefault
-public class CommutatorBlock extends AbstractRotorBlock implements IBE<CommutatorBlockEntity>, IBrushPlacement {
+public class CommutatorBlock extends AbstractRotorBlock implements IBE<CommutatorBlockEntity>, ICommutatorBlock {
     public static final DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    final BlockStateTerminalCollection terminals;
-    final BlockStateTerminalCollection terminalsFlipped;
+    private final BlockStateTerminalCollection terminals;
+    private final BlockStateTerminalCollection terminalsFlipped;
     private final ImmutableMap<BlockState, VoxelShape> outlines;
 
     private static final TerminalBoundingBox[] TERMINALS_HORIZONTAL = new TerminalBoundingBox[] {
@@ -113,6 +113,13 @@ public class CommutatorBlock extends AbstractRotorBlock implements IBE<Commutato
     public BlockEntityType<? extends CommutatorBlockEntity> getBlockEntityType() {
         return ModdedBlockEntities.GENERATOR_COMMUTATOR.get();
     }
+    
+    @Override
+    public ITerminalPlacement terminal(BlockState state, int index, boolean flip) {
+        if (flip)
+            return terminals.get(state, index);
+        return terminalsFlipped.get(state, index);
+    }
 
     @Override
     public InteractionResult onWrenched(BlockState state, UseOnContext context) {
@@ -165,7 +172,6 @@ public class CommutatorBlock extends AbstractRotorBlock implements IBE<Commutato
     public Direction.@NotNull Axis getAssemblyRotationAxis(BlockState state) {
         return state.getValue(HORIZONTAL_FACING).getAxis();
     }
-
     @Override
     public Vec3 brushOffset(BlockState state) {
         return switch (state.getValue(HORIZONTAL_FACING).getAxis()) {
