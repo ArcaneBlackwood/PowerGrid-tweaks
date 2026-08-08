@@ -45,8 +45,8 @@ public class GeneratorClutchBlockEntity extends GeneratingKineticBlockEntity imp
 
     private int currentRedstonePower;
 
-    public float load;
-    private float motorLoad;
+    public float load = 0f;
+    private float motorLoad = 0f;
     private boolean recalculateStress = false;
     private int generatedSpeed;
     private int prevRedstoneOut;
@@ -175,8 +175,7 @@ public class GeneratorClutchBlockEntity extends GeneratingKineticBlockEntity imp
             if(hasNetwork() && !level.isClientSide) {
                 var network = getOrCreateNetwork();
                 network.updateStressFor(this, calculateStressApplied());
-                if (recalculateStress)
-                    network.updateCapacityFor(this, calculateAddedStressCapacity());
+                network.updateCapacityFor(this, calculateAddedStressCapacity());
                 notifyUpdate();
             }
             recalculateStress = false;
@@ -233,7 +232,10 @@ public class GeneratorClutchBlockEntity extends GeneratingKineticBlockEntity imp
         if(mode.get() == ClutchMode.GENERATOR) {
             float couplingStrength = (15 - currentRedstonePower) / 15f;
             this.lastStressApplied = stressSum() * couplingStrength;
-            return lastStressApplied * load;
+            if (motorLoad > 1f)
+                return lastStressApplied;
+            else
+                return lastStressApplied * load;
         } else {
             return 0;
         }
