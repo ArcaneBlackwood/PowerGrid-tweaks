@@ -171,11 +171,12 @@ public class GeneratorClutchBlockEntity extends GeneratingKineticBlockEntity imp
     @Override
     public void tick() {
         super.tick();
-        if(recalculateStress) {
+        if(recalculateStress || mode.get() == ClutchMode.GENERATOR) {
             if(hasNetwork() && !level.isClientSide) {
                 var network = getOrCreateNetwork();
                 network.updateStressFor(this, calculateStressApplied());
-                network.updateCapacityFor(this, calculateAddedStressCapacity());
+                if (recalculateStress)
+                    network.updateCapacityFor(this, calculateAddedStressCapacity());
                 notifyUpdate();
             }
             recalculateStress = false;
@@ -232,7 +233,7 @@ public class GeneratorClutchBlockEntity extends GeneratingKineticBlockEntity imp
         if(mode.get() == ClutchMode.GENERATOR) {
             float couplingStrength = (15 - currentRedstonePower) / 15f;
             this.lastStressApplied = stressSum() * couplingStrength;
-            return lastStressApplied;
+            return lastStressApplied * load;
         } else {
             return 0;
         }
