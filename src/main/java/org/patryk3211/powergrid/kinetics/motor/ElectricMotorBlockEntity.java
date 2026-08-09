@@ -74,7 +74,6 @@ public class ElectricMotorBlockEntity extends GeneratingKineticBlockEntity imple
             } else {
                 load = 0.05f;
             }
-            coil.setResistance(resistance() / load);
         }
     }
 

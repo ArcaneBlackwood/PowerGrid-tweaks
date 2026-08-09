@@ -78,7 +78,6 @@ public class ConstantSpeedMotorBlockEntity extends GeneratingKineticBlockEntity 
             } else {
                 load = 0.05f;
             }
-            coil.setResistance(resistance() / load);
         }
     }
 
