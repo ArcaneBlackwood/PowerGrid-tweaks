@@ -32,6 +32,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
+import org.patryk3211.powergrid.collections.ModdedConfigs;
 import org.patryk3211.powergrid.collections.ModdedEntities;
 import org.patryk3211.powergrid.collections.ModdedPackets;
 import org.patryk3211.powergrid.network.packets.EntityDataS2CPacket;
@@ -63,6 +64,8 @@ public class HangingWireEntity extends WireEntity implements IComplexRaycast {
     }
 
     public static boolean checkClearance(Level world, Vec3 start, Vec3 end) {
+        if (ModdedConfigs.server().electricity.wireThroughBlocks.get())
+            return true;
         if(!SableUtils.sameSubLevel(world, start, end))
             return true;
         var result = BlockTrace.raycast(world, start, end);
@@ -216,6 +219,7 @@ public class HangingWireEntity extends WireEntity implements IComplexRaycast {
             world.addParticle(ParticleTypes.SMOKE, x, y, z, 0.0f, 0.05f, 0.0f);
         }
 
+        if (!ModdedConfigs.server().electricity.wireThroughBlocks.get())
         if(!isDynamic && !world.isClientSide && clearanceCheck++ >= CLEARANCE_CHECK_INTERVAL && terminalPos1 != null && terminalPos2 != null) {
             clearanceCheck = 0;
             var result = BlockTrace.raycast(world, terminalPos1, terminalPos2);
