@@ -190,6 +190,11 @@ public class ClientWireInteractions {
     }
 
     public static void alternatePlacementCheck(Minecraft client, int action) {
+        if (action == GLFW.GLFW_RELEASE && client.player instanceof IAlternatePlacementExtension ext) {
+            ext.powerGrid$setAlternatePlacement(false);
+            ModdedPackets.sendToServer(new AlternatePlacementStatusC2SPacket(false));
+            return;
+        }
         var stack = client.player.getMainHandItem();
         if(!IWire.isWire(client.level, stack.getItem()))
             return;
@@ -197,6 +202,9 @@ public class ClientWireInteractions {
             return;
         // Update alternate placement status
         if(action == GLFW.GLFW_PRESS || action == GLFW.GLFW_RELEASE) {
+            if(client.player instanceof IAlternatePlacementExtension ext) {
+                ext.powerGrid$setAlternatePlacement(action == GLFW.GLFW_PRESS);
+            }
             ModdedPackets.sendToServer(new AlternatePlacementStatusC2SPacket(action == GLFW.GLFW_PRESS));
         }
     }
