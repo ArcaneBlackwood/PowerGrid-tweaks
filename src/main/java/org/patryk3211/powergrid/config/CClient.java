@@ -34,6 +34,7 @@ public class CClient extends ConfigBase {
     public final ConfigFloat generatorSoundMaxCurrent = f(15.0F, 0.0F, "generatorSoundMaxCurrent", Comments.generatorSoundMaxCurrent);
     public final ConfigFloat generatorSoundCurrentCurve = f(0.4F, 0.0F, "generatorSoundCurrentCurve", Comments.generatorSoundCurrentCurve);
 
+    public final CCircuit Circuit = nested(1, CCircuit::new, "Circuit editor stuff");
 
     @Override
     public String getName() {

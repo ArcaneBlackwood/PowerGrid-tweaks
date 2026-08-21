@@ -1,3 +1,3 @@
-// 1.21.1	2026-07-19T15:22:50.0827548	powergrid's processing recipes: magnetization
+// 1.21.1	2026-08-15T23:12:42.511274311	powergrid's processing recipes: magnetization
+c42bf27d3bd122362235f454ee5fe0fe8808b79c data/powergrid/recipe/magnetization/andesite_alloy.json
 259fb3d833d63a0ca7645b1274d59e144c5e9cd5 data/powergrid/recipe/magnetization/crushed_raw_iron.json
-537a8c75efaee15aa7d791867d08c3273140e91a data/powergrid/recipe/magnetization/iron_ingot.json

@@ -5,6 +5,7 @@ import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import org.patryk3211.powergrid.collections.ModdedBlockEntities;
 import org.patryk3211.powergrid.compat.cc.clutch.GeneratorClutchPeripheral;
 import org.patryk3211.powergrid.compat.cc.gauges.CurrentGaugePeripheral;
+import org.patryk3211.powergrid.compat.cc.gauges.EnergyMeterPeripheral;
 import org.patryk3211.powergrid.compat.cc.gauges.PowerGaugePeripheral;
 import org.patryk3211.powergrid.compat.cc.gauges.VoltageGaugePeripheral;
 
@@ -29,6 +30,11 @@ public class CCBridge {
                 PeripheralCapability.get(),
                 ModdedBlockEntities.GENERATOR_CLUTCH.get(),
                 (be, direction) -> new GeneratorClutchPeripheral(be)
+        );
+        event.registerBlockEntity(
+                PeripheralCapability.get(),
+                ModdedBlockEntities.ENERGY_METER.get(),
+                (be, direction) -> new EnergyMeterPeripheral(be)
         );
     }
 }

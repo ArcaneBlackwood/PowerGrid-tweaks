@@ -15,9 +15,8 @@
  */
 package org.patryk3211.powergrid.equipment.zapper;
 
-import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
@@ -25,7 +24,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,6 +34,7 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.*;
+import org.jetbrains.annotations.Nullable;
 import org.patryk3211.powergrid.collections.ModdedDamageTypes;
 import org.patryk3211.powergrid.collections.ModdedEntities;
 import org.patryk3211.powergrid.collections.ModdedPackets;
@@ -46,7 +45,6 @@ import java.util.ArrayList;
 
 public class ZapProjectileEntity extends AbstractHurtingProjectile {
     private float power;
-    
     public ZapProjectileEntity(EntityType<? extends AbstractHurtingProjectile> type, Level world) {
         super(type, world);
     }
@@ -73,6 +71,16 @@ public class ZapProjectileEntity extends AbstractHurtingProjectile {
 
     public static void playLaunchSound(Level world, Vec3 location, float pitch) {
         ModdedSoundEvents.ELECTROZAPPER_SHOOT.playAt(world, location, 1, pitch, true);
+    }
+
+    @Override
+    protected boolean shouldBurn() {
+        return false;
+    }
+
+    @Override
+    protected @Nullable ParticleOptions getTrailParticle() {
+        return null;
     }
 
     @Override
@@ -105,8 +113,7 @@ public class ZapProjectileEntity extends AbstractHurtingProjectile {
     }
 
     private DamageSource causeZapDamage() {
-        Registry<DamageType> registry = level().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE);
-        return new DamageSource(registry.getHolder(ModdedDamageTypes.ZAP).get(), this, getOwner());
+        return new DamageSource(ModdedDamageTypes.ZAP.holder(level()), this, getOwner());
     }
 
     @Override

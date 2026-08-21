@@ -1,39 +1,31 @@
 package org.patryk3211.powergrid.equipment;
 
+import dev.architectury.injectables.annotations.ExpectPlatform;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.level.Level;
+import org.patryk3211.powergrid.collections.ModdedDataComponents;
 import org.patryk3211.powergrid.utility.Lang;
-
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.nbt.CompoundTag;
 
 import java.util.List;
 
 public class ItemBoostUtils {
     public static boolean isBoosted(ItemStack stack) {
-        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
-            .copyTag()
-            .getInt("Boosted") > 0;
+        var data = stack.get(ModdedDataComponents.BOOST.get());
+        return data != null && data.durability() > 0;
     }
 
 
     public static void setBoosted(ItemStack stack, boolean boosted) {
-        stack.update(
-            DataComponents.CUSTOM_DATA,
-            CustomData.EMPTY,
-            data -> {
-                CompoundTag tag = data.copyTag();
-                if (boosted)
-                    tag.putInt("Boosted", (int)(stack.getMaxDamage() * 0.3f));
-                else
-                    tag.remove("Boosted");
-                return CustomData.of(tag);
-            }
-        );
+        if(boosted) {
+            stack.set(ModdedDataComponents.BOOST.get(), BoostData.of((int) (stack.getMaxDamage() * 0.3f)));
+        } else {
+            stack.remove(ModdedDataComponents.BOOST.get());
+        }
     }
 
     public static void addTooltip(ItemStack stack, List<Component> tooltip) {
@@ -45,32 +37,29 @@ public class ItemBoostUtils {
     }
 
     public static void damageBoost(ItemStack stack, Runnable breakCallback) {
-        CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        CompoundTag tag = data.copyTag();
-
-        if (!tag.contains("Boosted"))
+        var data = stack.get(ModdedDataComponents.BOOST.get());
+        if(data == null)
             return;
-
-        int dmg = tag.getInt("Boosted") - 1;
-
-        if (dmg <= 0) {
-            tag.remove("Boosted");
-            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-
-            if (dmg == 0)
+        var dmg = data.durability() - 1;
+        if(dmg <= 0) {
+            stack.remove(ModdedDataComponents.BOOST.get());
+            if(dmg == 0)
                 breakCallback.run();
 
             return;
         }
-
-        tag.putInt("Boosted", dmg);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        stack.set(ModdedDataComponents.BOOST.get(), BoostData.of(dmg));
     }
 
     public static boolean useBoost(ItemStack stack, LivingEntity entity) {
         if(!isBoosted(stack))
             return false;
-        ItemBoostUtils.damageBoost(stack, () -> stack.hurtAndBreak(1000000, entity, EquipmentSlot.MAINHAND));
+        ItemBoostUtils.damageBoost(stack, () -> entity.onEquippedItemBroken(stack.getItem(), EquipmentSlot.MAINHAND));
         return true;
+    }
+
+    @ExpectPlatform
+    public static RecipeHolder<?> findRecipe(Level level, ItemStack chip, ItemStack toBoost) {
+        throw new AssertionError();
     }
 }

@@ -120,7 +120,7 @@ public class PowerGridImpl {
         PowerGrid.init();
 
         TABS.register("main", () -> CreativeModeTab.builder()
-                .icon(() -> new ItemStack((ItemLike) ModdedItems.WIRE))
+                .icon(() -> new ItemStack(ModdedBlocks.ELECTRIC_MOTOR))
                 .displayItems(new ItemDisplay.BaseItemDisplay(true))
                 .title(net.minecraft.network.chat.Component.translatable("itemGroup.powergrid.main"))
                 .build());
@@ -150,7 +150,7 @@ public class PowerGridImpl {
     @SubscribeEvent
     public static void newDynamicRegistryEvent(DataPackRegistryEvent.NewRegistry event) {
         event.dataPackRegistry(ComponentRegistry.ITEM_REGISTRY_KEY, ComponentRegistry.ITEM_CODEC, ComponentRegistry.ITEM_CODEC);
-        event.dataPackRegistry(WireRegistry.KEY, WireItemEntry.CODEC, WireItemEntry.CODEC);
+        event.dataPackRegistry(WireRegistry.KEY, WireItemEntry.CODEC.orElse(null), WireItemEntry.CODEC);
     }
 
     @SubscribeEvent
@@ -276,11 +276,16 @@ public class PowerGridImpl {
         generator.addProvider(true, (DataProvider.Factory<SequencedAssemblyRecipes>) (PackOutput o) -> new SequencedAssemblyRecipes(o, registries));
         generator.addProvider(true, (DataProvider.Factory<org.patryk3211.powergrid.data.recipe.forge.SequencedAssemblyRecipes>) (PackOutput o) -> new org.patryk3211.powergrid.data.recipe.forge.SequencedAssemblyRecipes(o, registries));
         generator.addProvider(true, (DataProvider.Factory<DeployerApplicationRecipes>) (PackOutput o) -> new DeployerApplicationRecipes(o, registries));
-
+        generator.addProvider(true, (DataProvider.Factory<ModdedAdvancements>) (PackOutput o) -> new ModdedAdvancements(o, registries));
         generator.addProvider(true, (DataProvider.Factory<BlockTagProvider>) (PackOutput o) -> new BlockTagProvider(o, registries));
         generator.addProvider(true, (DataProvider.Factory<ItemTagProvider>) (PackOutput o) -> new ItemTagProvider(o, registries));
         generator.addProvider(true, (DataProvider.Factory<EntityTagProvider>) (PackOutput o) -> new EntityTagProvider(o, registries));
         generator.addProvider(true, ModdedSoundEvents.provider(output));
+    }
+
+    @SubscribeEvent
+    public static void onRegister(RegisterEvent event) {
+        PowerGrid.onRegister(event.getRegistry());
     }
 
     private static void provideDefaultLang(String fileName, BiConsumer<String, String> consumer) {

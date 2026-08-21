@@ -22,6 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.Level;
+import org.patryk3211.powergrid.collections.ModdedDataComponents;
 import org.patryk3211.powergrid.collections.ModdedTags;
 import org.patryk3211.powergrid.equipment.BoostRecipe;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,25 +41,17 @@ public class RecipeApplierMixin {
     )
     private static void powerGrid$recipeTransferNbt(Level level, ItemStack stackIn, Recipe<?> recipe, boolean returnProcessingRemainder, CallbackInfoReturnable<List<ItemStack>> cir) {
         var outputs = cir.getReturnValue();
-        if(outputs == null || outputs.isEmpty() ||
-                !stackIn.is(ModdedTags.Item.CIRCUIT_SCHEMATIC_HOLDER.tag) ||
-                !stackIn.has(DataComponents.CUSTOM_DATA) || !stackIn.get(DataComponents.CUSTOM_DATA).contains("Schematic"))
+        if(outputs == null || outputs.isEmpty())
             return;
-        if (recipe instanceof BoostRecipe) {
-            if (stackIn.has(DataComponents.CUSTOM_DATA)) {
-                CompoundTag tagIn = stackIn.get(DataComponents.CUSTOM_DATA).copyTag();
-                CompoundTag tagOut = outputs.get(0)
-                    .getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
-                    .copyTag();
-                for (String key : tagIn.getAllKeys()) {
-                    if (key.equals("Boosted"))
-                        continue;
-                    tagOut.put(key, tagIn.get(key).copy());
-                }
-                outputs.get(0).set(DataComponents.CUSTOM_DATA, CustomData.of(tagOut));
+        if(recipe instanceof BoostRecipe) {
+            if(stackIn.has(ModdedDataComponents.BOOST.get())) {
+                outputs.get(0).set(ModdedDataComponents.BOOST.get(), stackIn.get(ModdedDataComponents.BOOST.get()));
             }
             return;
         }
+        if(!stackIn.is(ModdedTags.Item.CIRCUIT_SCHEMATIC_HOLDER.tag) ||
+                !stackIn.has(DataComponents.CUSTOM_DATA) || !stackIn.get(DataComponents.CUSTOM_DATA).contains("Schematic"))
+            return;
         // Modify output with NBT
         for(var output : outputs) {
             if(output.is(ModdedTags.Item.CIRCUIT_SCHEMATIC_HOLDER.tag)) {

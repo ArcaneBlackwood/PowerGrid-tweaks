@@ -22,7 +22,6 @@ public class CElectricity extends ConfigBase {
     public final ConfigBool explosiveDeconstruction = b(true, "explosiveDeconstruction", Comments.explosiveDeconstruction);
     public final ConfigBool overheating = b(true, "overheating", Comments.overheating);
     public final ConfigBool wireOverheating = b(true, "wireOverheating", Comments.wireOverheating);
-    public final ConfigBool wireThroughBlocks = b(false, "wireThroughBlocks", Comments.wireThroughBlocks);
 
     public final ConfigFloat heaterFanProcessingSpeedMultiplier = f(0.75f, 0, "heaterFanProcessingSpeedMultiplier", Comments.heaterFanProcessingSpeedMultiplier);
 
@@ -61,13 +60,35 @@ public class CElectricity extends ConfigBase {
     public final ConfigFloat mediumCoreAl = f(10.0f, 0, "mediumCoreAl", Comments.mediumCoreAl);
     public final ConfigFloat mediumCoreK = f(0.99999f, 0, 1, "mediumCoreK", Comments.mediumCoreK);
 
+    public final ConfigFloat wireCutDamageCurrentThreshold = f(0.2f, 0, "wireCutDamageCurrentThreshold", Comments.wireCutDamageCurrentThreshold);
+    public final ConfigBool creativePlayerShortsWires = b(false, "creativePlayerShortsWires", Comments.creativePlayerShortsWires);
+    public final ConfigFloat entityCurrentDamageThreshold = f(0.1f, 0, "entityCurrentDamageThreshold", Comments.entityCurrentDamageThreshold);
+    public final ConfigFloat entityResistance = f(5000, 0, "entityResistance", Comments.entityResistance);
+
+    public final ConfigBool entityWireInteraction = b(true, "entityWireInteractions", Comments.entityWireInteractions);
+    public final ConfigInt factoryLightProjectionRange = i(16, 0, "factoryLightProjectionRange", Comments.factoryLightProjectionRange);
     public final ConfigBool plotterRecordNonconvergence = b(false, "plotterRecordNonconvergence", Comments.plotterRecordNonconvergence);
+
+    public final ConfigInt electricPumpRange = i(24, 0, "electricPumpRange", Comments.electricPumpRange);
+    public final ConfigFloat electricPumpPower = f(2.135f, 0, "electricPumpPower", Comments.electricPumpPower);
+    public final ConfigFloat electricPumpMaxSpeed = f(256f, 0, "electricPumpMaxSpeed", Comments.electricPumpMaxSpeed);
 
     public final ConfigFloat feInverterControlVoltage = f(20, 0, "feInverterControlVoltage", Comments.feInverterControlVoltage);
     public final ConfigFloat feInverterControlCapacitance = f(0.0001f, 0, 1, "feInverterControlCapacitance", Comments.feInverterControlCapacitance);
     public final ConfigInt feInverterBufferSize = i(20000, 0, "feInverterBufferSize", Comments.feInverterBufferSize);
 
     public final ConfigFloat basinHeaterEnergyScale = f(1, 0, "basinHeaterEnergyScale", Comments.basinHeaterEnergyScale);
+    public final ConfigFloat solarPanelVoc = f(26.4f, 0, 100, "solarPanelVocTarget", Comments.solarPanelVocTarget);
+    public final ConfigInt solarPanelCellCount = i(48, 0, 100, "solarPanelCellCount", Comments.solarPanelCellCount);
+    public final ConfigFloat solarPanelIsc = f(3.3f, 0, 100, "solarPanelIscTarget", Comments.solarPanelIscTarget);
+    public final ConfigFloat solarPanelVmp = f(21.12f, 0, 100, "solarPanelVmpTarget", Comments.solarPanelVmp);
+    public final ConfigFloat solarPanelImp = f(3.036f, 0, 100, "solarPanelImpTarget", Comments.solarPanelImp);
+    public final ConfigInt solarPanelNOCT = i(45, 0, 100, "solarPanelNOCT", Comments.solarPanelNOCT);
+    public final ConfigInt solarPanelMaxSize = i(25, 1, "solarPanelMaxSize", Comments.solarPanelMaxSize);
+
+    public final ConfigFloat hvSwitchSparkExtinguishRPMFactor = f(1, 0, "hvSwitchSparkExtinguishRPMFactor", Comments.hvSwitchSparkExtinguishRPMFactor);
+    public final ConfigFloat hvSwitchSparkMinimumCurrent = f(0.1f, 0, "hvSwitchSparkMinimumCurrent", Comments.hvSwitchSparkMinimumCurrent);
+    public final ConfigFloat hvSwitchSparkPotentialFactor = f(1000, 0, "hvSwitchSparkPotentialFactor", Comments.hvSwitchSparkPotentialFactor);
 
     public final CSolver solver = nested(1, CSolver::new, Comments.solver);
     public final CResistance resistance = nested(1, CResistance::new, Comments.resistance);
@@ -86,7 +107,6 @@ public class CElectricity extends ConfigBase {
         public static final String explosiveDeconstruction = "Controls the behaviour of overheated devices. If false, instead of exploding, they break without dropping items.";
         public static final String overheating = "Controls the overheat mechanic. Devices which are overheated, break.";
         public static final String wireOverheating = "Controls the overheat mechanic for wires. Wires will burn if they overheat.";
-        public static final String wireThroughBlocks = "Enables hanging wires to clip through blocks.";
 
         public static final String heaterFanProcessingSpeedMultiplier = "Multiplier of the base fan bulk processing time applied to items processed with the heating coil (lower value means faster processing)";
 
@@ -125,12 +145,36 @@ public class CElectricity extends ConfigBase {
         public static final String mediumCoreAl = "Al parameter of medium transformer core (affects resistance per turn)";
         public static final String mediumCoreK = "K parameter of medium transformer core (affects stray resistance)";
 
+        public static final String factoryLightProjectionRange = "Maximum block range of the factory light projected light blocks";
+
+        public static final String wireCutDamageCurrentThreshold = "Minimum current flowing through a cut wire that will start causing damage";
+        public static final String creativePlayerShortsWires = "Enable circuit forming interaction for players in creative mode";
+        public static final String entityCurrentDamageThreshold = "Minimum current flowing through an entity for it to receive damage";
+        public static final String entityResistance = "Resistance of entities when they are shorting wires";
+
+        public static final String entityWireInteractions = "Enables entities to form circuits when touching wires";
+
         public static final String plotterRecordNonconvergence = "Control whether the plotter records voltage values when networks are not converged";
+
+        public static final String electricPumpRange = "Block range of the electric pump";
+        public static final String electricPumpPower = "Controls how much power is needed to run the pump at a given speed";
+        public static final String electricPumpMaxSpeed = "Maximum speed the pump can run at (can be above the Create's speed limit)";
 
         public static final String feInverterControlVoltage = "Maximum value of the FE Inverter control pin voltage";
         public static final String feInverterControlCapacitance = "Capacitance of the FE Inverter control pin";
         public static final String feInverterBufferSize = "Controls the FE buffer size, and with it, the maximum generated voltage";
 
         public static final String basinHeaterEnergyScale = "Scales the required energy of a basin heater.  Value of 1 will power a steam engine with 16384 SU";
+        public static final String solarPanelVocTarget = "Target open circuit voltage for the solar panels";
+        public static final String solarPanelCellCount = "Controls the amount of cells in the solar panel (Should be left at 48 if your not trying to imitate a real panel)";
+        public static final String solarPanelIscTarget = "Target short circuit current for the solar panels";
+        public static final String solarPanelVmp = "Controls the voltage part of the max power point (should be around 80% of the Voc)";
+        public static final String solarPanelImp = "Controls the current part of the max power point, (should be around 92% of the Isc)";
+        public static final String solarPanelNOCT = "This is the Nominal Operating Cell Temp of the solar cells in the panel";
+        public static final String solarPanelMaxSize = "Controls maximum number of solar panels in a single multiblock";
+
+        public static final String hvSwitchSparkExtinguishRPMFactor = "RPM required to cleanly turn off a HV switch for a given current flowing through it";
+        public static final String hvSwitchSparkMinimumCurrent = "Minimum current for a HV switch spark to continue existing";
+        public static final String hvSwitchSparkPotentialFactor = "Voltage required to spark when the switch is turning on, scales with contact distance";
     }
 }

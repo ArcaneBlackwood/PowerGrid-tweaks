@@ -26,27 +26,34 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.joml.Vector3d;
 import org.patryk3211.powergrid.collections.ModdedBlocks;
+import org.patryk3211.powergrid.collections.ModdedConfigs;
 import org.patryk3211.powergrid.collections.ModdedTags;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.patryk3211.powergrid.electricity.solarpanel.SolarPanelBlockEntity.*;
+import java.util.Set;
 
 public class SolarHelper {
+    public static final int SOLAR_CONSTANT = 1361;
+    public static final double IDEALITY = 1.5;
+
+    // STC constants
+    public static final double W_REF = 1000.0;
+    public static final double T_REF = 25.0;
+
+    public static final double ALPHA_ISC = 0.0005;
+    public static final double BETA_VOC  = -0.0035;
+    public static final double RS = 0.05;
+
+    public static final double DIFFUSE_FRAC = .12;
+    public static final double ALBEDO_FRAC = .08;
+
     private static boolean showDebugLines = false;
+
     public record DDAHit(BlockPos worldOrLocalPos, AbstractContraptionEntity contraption) {}
 
-    public static double[] getTempAdjusted(double irradiance, double cellTemp, double Vt, int stringsInParallel) {
-        var Isc_T = SHORT_CURRENT * stringsInParallel * (irradiance / 1000) * (1 + ALPHAISC * (cellTemp - 25));
-        if (Isc_T <= 0) return new double[]{0, 0};
-        var Voc_base = IDEALITY * Vt * Math.log(Isc_T / (I_O * stringsInParallel) + 1);
-        var Voc_T = Voc_base + BETAVOC * (cellTemp - 25);
-        return new double[]{Isc_T, Voc_T};
-    }
-
     public static double getCellTemp(double Irradiance, float AMBIENT_TEMP){
-        return AMBIENT_TEMP + (NOCT - 20) * (Irradiance / 800);
+        return AMBIENT_TEMP + (noct() - 20) * (Irradiance / 800);
     }
 
     public static double getAM(Level world){
@@ -73,6 +80,7 @@ public class SolarHelper {
     }
 
     public static List<DDAHit> DDA(Level level, Vec3 start, Vec3 end) {
+        if (level.isClientSide()) return new ArrayList<>();
         ServerLevel serverWorld = (ServerLevel) level;
         var checkBox = new AABB(start, end);
         List<AbstractContraptionEntity> candidates = level.getEntitiesOfClass(AbstractContraptionEntity.class, checkBox);
@@ -192,42 +200,152 @@ public class SolarHelper {
         return hits;
     }
 
-    public static boolean skyCheck(Level world, BlockPos Bpos) {
-        var Vpos = SableCompanion.INSTANCE.projectOutOfSubLevel(world, new Vector3d(Bpos.getX(), Bpos.getY(), Bpos.getZ()));
-        var pos = BlockPos.containing(JOMLConversion.toMojang(Vpos));
-        if (!world.canSeeSky(pos)){
-            var topY = world.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ());
-            var list = DDA(world, pos.getCenter(), pos.getCenter().add(0, topY - pos.getY(), 0));
-            boolean hit = false;
-            for (DDAHit result : list) {
-                BlockState blockState;
-                if (result.contraption() != null) {
-                    blockState = result.contraption().getContraption().getBlocks().get(result.worldOrLocalPos()).state();
-                } else {
-                    blockState = world.getBlockState(result.worldOrLocalPos());
-                }
+    public static double[] IVCurve(double irradiance, double cellTempC, double v0, int panelsInSeries, int panelsInParallel) {
+        double k = 1.380649e-23; // Boltzmann constant in J/K
+        double q = 1.602176634e-19; // Elementary charge in C
+        double dT = cellTempC - T_REF;
+        double gRatio = Math.max(0, irradiance) / W_REF;
+        if (gRatio <= 1e-6) return new double[] {0, 2e-2};
+        double Isc = (gRatio * (iscRef() + ALPHA_ISC * iscRef() * dT)) * panelsInParallel;
+        double logG = Math.log(Math.max(gRatio, 1e-6));
+        double tV = k * (cellTempC + 273.15) / q;
+        double delta = IDEALITY * cellCount() * tV;
+        double Voc = (vocRef() + BETA_VOC * vocRef() * dT + delta * logG) * panelsInSeries;
+        double Imp = (gRatio * (imp() + ALPHA_ISC * imp() * dT)) * panelsInParallel;
+        double Vmp = (vmp() + BETA_VOC * vmp() * dT + delta * logG) * panelsInSeries;
+        if (Voc <= 0 || Isc <= 0) return new double[] {0, 2e-2};
 
-                if (blockState.is(ModdedBlocks.SOLAR_PANEL.get())) {
-                    if (result.worldOrLocalPos().equals(pos)) {
-                        continue;
+        double ratio = Math.min(0.999, Imp / Isc);
+        double C2 = (Vmp / Voc - 1.0) / Math.log(1.0 - ratio);
+        double C1 = (1.0 - ratio) * Math.exp(-Vmp / (C2 * Voc));
+
+        double V = Math.max(0, Math.min(v0, Voc * 1.05));
+        double expTerm = Math.exp(V / (C2 * Voc));
+        double I = Isc * (1 - C1 * (expTerm - 1));
+        double dIdV = -Isc * C1 / (C2 * Voc) * expTerm;
+
+        double G = Math.max(1e-6, -dIdV);
+        double G_floor = Isc / Voc;
+        G = Math.max(G, G_floor);
+
+        double Ieq = I + G * V;
+        return new double[] {Ieq, G};
+    }
+
+    public static boolean skyCheck(Level world, BlockPos pos) {
+        var subLevel = SableCompanion.INSTANCE.getContaining(world, new Vector3d(pos.getX(), pos.getY(), pos.getZ()));
+        if (subLevel == null) {
+            if (!world.canSeeSky(pos)) {
+                var topY = world.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ());
+                var list = DDA(world, pos.getCenter(), pos.getCenter().add(0, topY - pos.getY(), 0));
+                boolean hit = false;
+                for (DDAHit result : list) {
+                    BlockState blockState;
+                    if (result.contraption() != null) {
+                        blockState = result.contraption().getContraption().getBlocks().get(result.worldOrLocalPos()).state();
                     } else {
-                        hit = true;
-                        break;
+                        blockState = world.getBlockState(result.worldOrLocalPos());
                     }
-                }
 
-                if (blockState.is(ModdedTags.Block.SOLAR_QUARTER_LIGHT.tag)) continue;
-                if (blockState.is(ModdedTags.Block.SOLAR_HALF_LIGHT.tag)) continue;
-                if (blockState.is(ModdedTags.Block.SOLAR_3QUARTER_LIGHT.tag)) continue;
-                if (blockState.is(ModdedTags.Block.SOLAR_FULL_LIGHT.tag)) continue;
-                hit = true;
-                break;
+                    if (blockState.is(ModdedBlocks.SOLAR_PANEL.get())) {
+                        if (result.worldOrLocalPos().equals(pos)) {
+                            continue;
+                        } else {
+                            hit = true;
+                            break;
+                        }
+                    }
+
+                    if (blockState.is(ModdedTags.Block.SOLAR_QUARTER_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_HALF_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_3QUARTER_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_FULL_LIGHT.tag)) continue;
+                    hit = true;
+                    break;
+                }
+                return !hit;
             }
-            if (hit){
-                return false;
-            } else return true;
+            return true;
+        } else {
+            var worldPos = BlockPos.containing(JOMLConversion.toMojang(SableCompanion.INSTANCE.projectOutOfSubLevel(world,
+                    new Vector3d(pos.getX(), pos.getY(), pos.getZ()))));
+            if (world.canSeeSky(worldPos) && world.canSeeSky(pos)) return true;
+            var topYWorld = world.getHeight(Heightmap.Types.MOTION_BLOCKING, worldPos.getX(), worldPos.getZ());
+            var topYSubLevel = world.getHeight(Heightmap.Types.MOTION_BLOCKING, pos.getX(), pos.getZ());
+            boolean hit = false;
+            if (topYSubLevel > pos.getY()) {
+                var list = DDA(world, pos.getCenter(), pos.getCenter().add(0, topYSubLevel - pos.getY(), 0));
+                for (DDAHit result : list) {
+                    BlockState blockState;
+                    if (result.contraption() != null) {
+                        blockState = result.contraption().getContraption().getBlocks().get(result.worldOrLocalPos()).state();
+                    } else {
+                        blockState = world.getBlockState(result.worldOrLocalPos());
+                    }
+
+                    if (blockState.is(ModdedBlocks.SOLAR_PANEL.get())) {
+                        if (result.worldOrLocalPos().equals(pos)) {
+                            continue;
+                        } else {
+                            hit = true;
+                            break;
+                        }
+                    }
+
+                    if (blockState.is(ModdedTags.Block.SOLAR_QUARTER_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_HALF_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_3QUARTER_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_FULL_LIGHT.tag)) continue;
+                    hit = true;
+                    break;
+                }
+            }
+
+            if (topYWorld > worldPos.getY()) {
+                var list = DDA(world, worldPos.getCenter(), worldPos.getCenter().add(0, topYWorld - worldPos.getY(), 0));
+                for (DDAHit result : list) {
+                    BlockState blockState;
+                    if (result.contraption() != null) {
+                        blockState = result.contraption().getContraption().getBlocks().get(result.worldOrLocalPos()).state();
+                    } else {
+                        blockState = world.getBlockState(result.worldOrLocalPos());
+                    }
+
+                    if (blockState.is(ModdedBlocks.SOLAR_PANEL.get())) {
+                        if (result.worldOrLocalPos().equals(pos)) {
+                            continue;
+                        } else {
+                            hit = true;
+                            break;
+                        }
+                    }
+
+                    if (blockState.is(ModdedTags.Block.SOLAR_QUARTER_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_HALF_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_3QUARTER_LIGHT.tag)) continue;
+                    if (blockState.is(ModdedTags.Block.SOLAR_FULL_LIGHT.tag)) continue;
+                    hit = true;
+                    break;
+                }
+            }
+            return !hit;
         }
-        return true;
+    }
+
+    public static Vec3 getSolarPanelCenter(BlockPos self, Set<BlockPos> connectedPanels) {
+        double sumX = self.getX();
+        double sumY = self.getY();
+        double sumZ = self.getZ();
+        for (BlockPos pos : connectedPanels) {
+            sumX += pos.getX();
+            sumY += pos.getY();
+            sumZ += pos.getZ();
+        }
+        int count = connectedPanels.size() + 1;
+        double avgX = sumX / count;
+        double avgY = sumY / count;
+        double avgZ = sumZ / count;
+        return new Vec3(avgX + 0.5, avgY + 0.5, avgZ + 0.5);
     }
 
     private static void debugLines(ServerLevel serverLevel, Vec3 pos, SimpleParticleType particle) {
@@ -237,4 +355,24 @@ public class SolarHelper {
     private static void debugLines(ServerLevel serverLevel, BlockPos pos, SimpleParticleType particle) {
         debugLines(serverLevel, new Vec3(pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5), particle);
     }
+
+    public static double vocRef() {
+        return ModdedConfigs.server().electricity.solarPanelVoc.get();
+    }
+    public static double iscRef() {
+        return ModdedConfigs.server().electricity.solarPanelIsc.get();
+    }
+    public static double vmp() {
+        return ModdedConfigs.server().electricity.solarPanelVmp.get();
+    }
+    public static double imp() {
+        return ModdedConfigs.server().electricity.solarPanelImp.get();
+    }
+    public static double cellCount() {
+        return ModdedConfigs.server().electricity.solarPanelCellCount.get();
+    }
+    public static double noct() {
+        return ModdedConfigs.server().electricity.solarPanelNOCT.get();
+    }
+
 }

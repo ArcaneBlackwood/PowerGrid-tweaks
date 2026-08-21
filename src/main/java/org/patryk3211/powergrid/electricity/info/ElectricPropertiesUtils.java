@@ -33,9 +33,9 @@ import static net.minecraft.ChatFormatting.*;
 
 public class ElectricPropertiesUtils {
     public static Component header(boolean shift) {
-        String[] holdDesc = Lang.translateDirect("tooltip.holdForDescription", "$")
+        String[] holdDesc = Lang.translateDirect("tooltip.holdForDescription", "__PH__")
                 .getString()
-                .split("\\$");
+                .split("__PH__", 2);
         MutableComponent keyShift = CreateLang.translateDirect("tooltip.keyShift");
         MutableComponent tabBuilder = Component.empty();
         tabBuilder.append(Component.literal(holdDesc[0]).withStyle(DARK_GRAY));

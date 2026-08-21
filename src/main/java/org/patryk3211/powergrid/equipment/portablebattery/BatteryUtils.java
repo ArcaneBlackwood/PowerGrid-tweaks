@@ -18,8 +18,16 @@ package org.patryk3211.powergrid.equipment.portablebattery;
 import com.simibubi.create.AllEnchantments;
 import dev.architectury.utils.Env;
 import dev.architectury.utils.EnvExecutor;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
@@ -27,8 +35,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import org.patryk3211.powergrid.collections.ModdedConfigs;
+import org.patryk3211.powergrid.collections.ModdedDataComponents;
+import org.patryk3211.powergrid.collections.ModdedSoundEvents;
 import org.patryk3211.powergrid.equipment.ItemBoostUtils;
 import org.patryk3211.powergrid.utility.ClientSideAccess;
+import org.patryk3211.powergrid.utility.Lang;
 
 public class BatteryUtils {
 
@@ -50,12 +61,7 @@ public class BatteryUtils {
     }
 
     public static int getCurrentCharge(ItemStack stack) {
-        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-        if(data == null)
-            return 0;
-
-        CompoundTag tag = data.copyTag();
-        return tag.getInt("Charge");
+        return stack.getOrDefault(ModdedDataComponents.PORTABLE_BATTERY_CHARGE.get(), 0);
     }
 
     public static float drawEnergy(Player player, int energy) {
@@ -66,22 +72,34 @@ public class BatteryUtils {
             return 0.0f;
         var charge = getCurrentCharge(stack);
         if(charge < energy)
-            return 0.0f;
-        float chargePercent = (float) getCurrentCharge(stack) / getMaxCharge(stack);
+            charge = 0;
+        float chargePercent = (float) charge / getMaxCharge(stack);
         float outputPercent = 1.0f;
         if(chargePercent < 0.5f) {
             // High ESR causing lower energy output
             outputPercent = chargePercent / 0.5f;
+            if(outputPercent < 0.25f)
+                outputPercent = 0.25f;
         }
         energy = (int) (energy * outputPercent);
-        if(energy == 0)
+        if(energy == 0) {
+            stack.remove(ModdedDataComponents.PORTABLE_BATTERY_CHARGE.get());
             return 0.0f;
+        }
+
         CustomData data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         CompoundTag newTag = data.copyTag();
         newTag.putInt("Charge", charge - energy);
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(newTag));
         if(charge < energy * outputPercent)
             return 0.0f;
+
+        stack.set(ModdedDataComponents.PORTABLE_BATTERY_CHARGE.get(), charge - energy);
+        if(player instanceof ServerPlayer serverPlayer) {
+            float maxCharge = getMaxCharge(stack);
+            sendWarning(serverPlayer, charge, charge - energy, (maxCharge / 10));
+            sendWarning(serverPlayer, charge, charge - energy, 25);
+        }
         return outputPercent;
     }
     public static int drawEnergyLimit(ItemStack stack, int fe) {
@@ -114,13 +132,34 @@ public class BatteryUtils {
         if(chargePercent < 0.5f) {
             // High ESR causing lower energy output
             outputPercent = chargePercent / 0.5f;
+            if(outputPercent < 0.25f)
+                outputPercent = 0.25f;
         }
         energy = (int) (energy * outputPercent);
-        if(energy == 0)
+        if(energy == 0 || !battery.has(ModdedDataComponents.PORTABLE_BATTERY_CHARGE.get()))
             return 0.0f;
-        if(charge < energy * outputPercent)
+        if(charge < energy)
             return 0.0f;
         return outputPercent;
+    }
+
+    private static void sendWarning(ServerPlayer player, float charge, float newCharge, float threshold) {
+        if (newCharge > threshold)
+            return;
+        if (charge <= threshold)
+            return;
+
+        boolean depleted = threshold <= 25;
+        MutableComponent component = Lang.translateDirect(depleted ? "gui.portable.battery.depleted" : "gui.portable.battery.low");
+
+        ModdedSoundEvents.UI_FAIL.play(player.level(), null, player.blockPosition(), .75f, 1);
+        ModdedSoundEvents.WIRE_BURNED.play(player.level(), null, player.blockPosition(), 1, .5f);
+
+        player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 40, 10));
+        player.connection.send(new ClientboundSetSubtitleTextPacket(
+                Component.literal("\u26A0 ").withStyle(depleted ? ChatFormatting.RED : ChatFormatting.GOLD)
+                        .append(component.withStyle(ChatFormatting.GRAY))));
+        player.connection.send(new ClientboundSetTitleTextPacket(CommonComponents.EMPTY));
     }
 
     public static boolean isBarVisible(ItemStack stack, int energyPerUse, float minPower) {
@@ -129,7 +168,7 @@ public class BatteryUtils {
         return EnvExecutor.getInEnv(Env.CLIENT, () -> ClientSideAccess::player)
                 .map(player -> {
                     var battery = getBattery(player);
-                    if(battery != null && tryDrawEnergy(battery, energyPerUse) >= minPower)
+                    if(battery != null && tryDrawEnergy(battery, energyPerUse) > minPower)
                         return true;
                     return stack.isDamaged();
                 }).orElse(false);
@@ -141,7 +180,7 @@ public class BatteryUtils {
         return EnvExecutor.getInEnv(Env.CLIENT, () -> ClientSideAccess::player)
                 .map(player -> {
                     var battery = getBattery(player);
-                    if(battery == null || tryDrawEnergy(battery, energyPerUse) < minPower)
+                    if(battery == null || tryDrawEnergy(battery, energyPerUse) <= minPower)
                         return Math.round(13.0F - (float) stack.getDamageValue() / stack.getMaxDamage() * 13.0F);
                     return battery.getBarWidth();
                 }).orElse(13);
@@ -153,11 +192,23 @@ public class BatteryUtils {
         return EnvExecutor.getInEnv(Env.CLIENT, () -> ClientSideAccess::player)
                 .map(player -> {
                     var battery = getBattery(player);
-                    if(battery == null || tryDrawEnergy(battery, energyPerUse) < minPower)
+                    if(battery == null || tryDrawEnergy(battery, energyPerUse) <= minPower)
                         return Mth.hsvToRgb(Math.max(0.0F, 1.0F - (float) stack.getDamageValue() / stack.getMaxDamage()) / 3.0F, 1.0F, 1.0F);
                     if(ItemBoostUtils.isBoosted(stack))
                         return 0x34a8eb;
                     return battery.getBarColor();
                 }).orElse(0);
+    }
+
+    public static boolean isBarVisible(ItemStack stack, int energyPerUse) {
+        return isBarVisible(stack, energyPerUse, 0);
+    }
+
+    public static int getBarWidth(ItemStack stack, int energyPerUse) {
+        return getBarWidth(stack, energyPerUse, 0);
+    }
+
+    public static int getBarColor(ItemStack stack, int energyPerUse) {
+        return getBarColor(stack, energyPerUse, 0);
     }
 }

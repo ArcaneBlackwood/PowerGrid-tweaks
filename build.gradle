@@ -201,9 +201,7 @@ subprojects {
 	}
 
 	tasks.named("build", {
-		var hash = getGitHash()
-		if(hash != null)
-			version = "mc${project.minecraft_version}-${project.mod_version}-${hash}"
+		version = "mc${project.minecraft_version}-${project.mod_version}"
 	})
 
 	def projNative = project(':native')

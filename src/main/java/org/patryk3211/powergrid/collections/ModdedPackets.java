@@ -34,7 +34,7 @@ import org.patryk3211.powergrid.utility.PlayerLookup;
 import java.util.Locale;
 
 public enum ModdedPackets implements BasePacketPayload.PacketTypeProvider {
-    ELECTRO_ZAPPER_SHOOT(ElectroZapperS2CPacket.class, ElectroZapperS2CPacket.STREAM_CODEC),
+    ELECTRO_ZAPPER_SHOOT(ElectroZapperS2CPacket.class, ElectroZapperS2CPacket.STREAM_CODEC)
     //DRILL_SPEED(DrillSpeedS2CPacket.class, DrillSpeedS2CPacket::new),
     ;
 

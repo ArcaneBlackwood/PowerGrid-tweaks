@@ -39,11 +39,14 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.patryk3211.powergrid.collections.ModdedBlockEntities;
-import org.patryk3211.powergrid.electricity.base.*;
+import org.patryk3211.powergrid.collections.ModdedConfigs;
+import org.patryk3211.powergrid.electricity.base.ElectricBlock;
+import org.patryk3211.powergrid.electricity.base.IDecoratedTerminal;
+import org.patryk3211.powergrid.electricity.base.TerminalBoundingBox;
 import org.patryk3211.powergrid.electricity.base.terminals.BlockStateTerminalCollection;
 import org.patryk3211.powergrid.kinetics.generator.rotor.AbstractRotorBlock;
 
-public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<CommutatorBlockEntity>, ICommutatorBlock {
+public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<CommutatorBlockEntity>, ICommutator {
     public static final DirectionProperty HORIZONTAL_FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty UP = BlockStateProperties.UP;
 
@@ -93,11 +96,23 @@ public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<C
         terminalsFlipped = BlockStateTerminalCollection.builder(this)
                 .forAllStatesExcept(state -> {
                     var facing = state.getValue(HORIZONTAL_FACING);
+                    var up = state.getValue(UP);
                     return BlockStateTerminalCollection.each(TERMINALS_HORIZONTAL_FLIPPED, terminal -> terminal
+                            .rotateAroundX(up ? 0 : 180)
                             .rotateAroundY((int) facing.toYRot() - 180));
+                })
+                .withShapeMapper(state -> {
+                    var axis = state.getValue(HORIZONTAL_FACING).getAxis();
+                    var up = state.getValue(UP);
+                    return (up ? shaperUp : shaperDown).get(axis);
                 })
                 .build();
         outlines = getShapeForEachState(terminals.shapeMapper());
+    }
+
+    @Override
+    public float getInertia() {
+        return ModdedConfigs.server().kinetics.generatorControls.generatorCommutatorInertia.getF();
     }
 
     @Override
@@ -118,13 +133,6 @@ public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<C
     @Override
     public BlockEntityType<? extends CommutatorBlockEntity> getBlockEntityType() {
         return ModdedBlockEntities.GENERATOR_COMMUTATOR.get();
-    }
-
-    @Override
-    public ITerminalPlacement terminal(BlockState state, int index, boolean flip) {
-        if (flip)
-            return terminals.get(state, index);
-        return terminalsFlipped.get(state, index);
     }
 
     @Override
@@ -163,7 +171,7 @@ public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<C
         var facing = state.getValue(HORIZONTAL_FACING);
         if(!state.getValue(UP))
             facing = facing.getOpposite();
-        return new Vec3(-3.5 / 16, 2 / 16f, 0)
+        return new Vec3(-3.5 / 16, 1 / 16f, 0)
                 .yRot((float) Math.PI * (facing.toYRot() - 180) / 180f);
     }
 
@@ -184,5 +192,15 @@ public class VerticalCommutatorBlock extends AbstractRotorBlock implements IBE<C
     @Override
     public BlockState mirror(BlockState state, Mirror mirrorIn) {
         return state.rotate(mirrorIn.getRotation(state.getValue(HORIZONTAL_FACING)));
+    }
+
+    @Override
+    public BlockStateTerminalCollection terminals() {
+        return terminals;
+    }
+
+    @Override
+    public BlockStateTerminalCollection terminalsFlipped() {
+        return terminalsFlipped;
     }
 }

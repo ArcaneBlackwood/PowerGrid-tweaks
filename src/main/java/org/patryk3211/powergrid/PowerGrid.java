@@ -24,10 +24,13 @@ import dev.architectury.event.events.common.*;
 import dev.architectury.injectables.annotations.ExpectPlatform;
 import dev.architectury.registry.registries.DeferredRegister;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -35,7 +38,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import org.patryk3211.powergrid.advancements.PowerGridTriggers;
 import net.minecraft.world.level.block.state.BlockState;
 import org.patryk3211.powergrid.circuits.components.Components;
 import org.patryk3211.powergrid.collections.*;
@@ -52,6 +57,7 @@ import org.patryk3211.powergrid.electricity.redstoneconverter.RedstoneConverterR
 import org.patryk3211.powergrid.electricity.sim.ElectricalNetwork;
 import org.patryk3211.powergrid.electricity.sim.solver.NativeMNA;
 import org.patryk3211.powergrid.electricity.solarpanel.SolarPanelBlock;
+import org.patryk3211.powergrid.electricity.wire.EntityWireInteraction;
 import org.patryk3211.powergrid.electricity.wire.WireItem;
 import org.patryk3211.powergrid.equipment.BoostRecipe;
 import org.patryk3211.powergrid.equipment.thunder.LightningRodMovementBehaviour;
@@ -106,13 +112,21 @@ public class PowerGrid {
 	public static void registerArchitecturyEvents() {
 		TickEvent.ServerLevelTick.SERVER_LEVEL_PRE.register(GlobalElectricNetworks::preTick);
 		TickEvent.ServerLevelTick.SERVER_LEVEL_POST.register(GlobalElectricNetworks::postTick);
+		TickEvent.SERVER_POST.register(EntityWireInteraction::postTick);
 		LifecycleEvent.SERVER_LEVEL_UNLOAD.register(GlobalElectricNetworks::unloadWorld);
+        LifecycleEvent.SETUP.register(PowerGrid::setup);
 		CommandRegistrationEvent.EVENT.register(ModdedCommands::register);
 		PlayerEvent.PLAYER_JOIN.register(PowerGrid::playerJoin);
 		PlayerEvent.PLAYER_QUIT.register(PowerGrid::playerQuit);
+		PlayerEvent.CHANGE_DIMENSION.register(PowerGrid::playerChangeDimension);
 		InteractionEvent.RIGHT_CLICK_BLOCK.register(WireItem::useOn);
 		InteractionEvent.RIGHT_CLICK_ITEM.register(WireItem::use);
-		LifecycleEvent.SETUP.register(PowerGrid::setup);
+	}
+
+	private static void setup() {
+		RedstoneConverterRegistry.init();
+		ModdedAdvancements.register();
+		TickEvent.PLAYER_PRE.register(PowerGrid::playerPre);
 	}
 
 	private static void playerQuit(ServerPlayer player) {
@@ -144,6 +158,9 @@ public class PowerGrid {
 		return;
 
 		battery.onWornTick(chestStack, player);
+	}
+	private static void playerChangeDimension(ServerPlayer player, ResourceKey<Level> oldDim, ResourceKey<Level> newDim) {
+		GlobalElectricNetworks.dropTrackers(player, oldDim);
 	}
 
 	private static void register() {
@@ -179,9 +196,11 @@ public class PowerGrid {
 		registerBlockMovementChecks();
 	}
 
-	private static void setup() {
-		RedstoneConverterRegistry.init();
-		TickEvent.PLAYER_PRE.register(PowerGrid::playerPre);
+	public static void onRegister(Registry<?> registry) {
+		if(registry == BuiltInRegistries.TRIGGER_TYPES) {
+			ModdedAdvancements.register();
+			PowerGridTriggers.register();
+		}
 	}
 
 	public static ResourceLocation asResource(String path) {
