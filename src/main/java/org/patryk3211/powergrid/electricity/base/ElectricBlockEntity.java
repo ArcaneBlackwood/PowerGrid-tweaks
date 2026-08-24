@@ -33,7 +33,7 @@ import java.util.List;
 public abstract class ElectricBlockEntity extends SmartBlockEntity implements IElectricEntity {
     protected ElectricBehaviour electricBehaviour;
     @Nullable
-    protected ThermalBehaviour thermalBehaviour;
+    protected AThermalBehaviour thermalBehaviour;
 
     private float power;
 
@@ -65,7 +65,7 @@ public abstract class ElectricBlockEntity extends SmartBlockEntity implements IE
     }
 
     @Nullable
-    public ThermalBehaviour specifyThermalBehaviour() {
+    public AThermalBehaviour specifyThermalBehaviour() {
         return null;
     }
 

@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.patryk3211.powergrid.collections.ModdedConfigs;
+import org.patryk3211.powergrid.electricity.base.AThermalBehaviour;
 import org.patryk3211.powergrid.electricity.base.ElectricBehaviour;
 import org.patryk3211.powergrid.electricity.base.IElectricEntity;
 import org.patryk3211.powergrid.electricity.base.ThermalBehaviour;
@@ -49,7 +50,7 @@ public class ConstantSpeedMotorBlockEntity extends GeneratingKineticBlockEntity 
 
     protected ElectricBehaviour electricBehaviour;
     @Nullable
-    protected ThermalBehaviour thermalBehaviour;
+    protected AThermalBehaviour thermalBehaviour;
 
     private SpeedScrollValueBehaviour scrollValue;
 
