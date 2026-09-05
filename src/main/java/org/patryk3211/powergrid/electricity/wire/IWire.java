@@ -36,6 +36,8 @@ public interface IWire {
     }
 
     static boolean isCord(Level level, Item item) {
-        return isWire(level, item) && WireRegistry.forItem(level, item).cord();
+        var cord = WireRegistry.forItem(level, item);
+        if (cord == null) return false;
+        return isWire(level, item) && cord.cord();
     }
 }

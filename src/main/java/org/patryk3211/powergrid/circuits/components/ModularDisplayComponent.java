@@ -30,6 +30,7 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
     public static final EnumProperty<DisplayModuleType> CURRENT_MODULE = new EnumProperty<DisplayModuleType>(PowerGrid.MOD_ID, "modular_display_module",
             DisplayModuleType.class, new DisplayModuleType[]{DisplayModuleType.ZERO_TO_NINE, DisplayModuleType.NINE_TO_ZERO, DisplayModuleType.ONE_TO_ZERO, DisplayModuleType.HEXADECIMAL, DisplayModuleType.SYMBOLS, DisplayModuleType.ALPHABET});
     public static final EnumProperty<DyeColor> CURRENT_COLOR = new EnumProperty<DyeColor>(PowerGrid.MOD_ID, "modular_display_text_color", DyeColor.class);
+    public static final IntProperty MAX_NUMBER = new IntProperty(PowerGrid.MOD_ID, "modular_display_max_index", 9, 0, 200);
 
     public ModularDisplayComponent(ComponentFootprint footprint) {
         super(footprint);
@@ -50,7 +51,7 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
     @Override
     protected void addProperties(ImmutableCollection.Builder<ComponentProperty<?>> properties) {
         super.addProperties(properties);
-        properties.add(CURRENT_MODULE, CURRENT_COLOR, RESISTANCE, MIN_CURRENT, INDEX, HALF_CLICK, WIRE_RESET, power(25));
+        properties.add(CURRENT_MODULE, CURRENT_COLOR, MAX_NUMBER, RESISTANCE, MIN_CURRENT, INDEX, HALF_CLICK, WIRE_RESET, power(25));
     }
 
     @Override
@@ -67,6 +68,8 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
         var coilNodeToNegativeCurrent = Math.abs(coilNodeToNegative.current());
         var coilNodeToResetCurrent = Math.abs(coilNodeToReset.current());
         var charCount = module.getCharacterCount();
+        if (placed.get(MAX_NUMBER) > charCount) placed.set(MAX_NUMBER, (int)charCount);
+        charCount = placed.get(MAX_NUMBER);
         var index = placed.get(INDEX);
         //every module display texture has the characters in the sprite plus a blank space and the first character again for smooth transition
         //but im only counting characters before the blank space and adding one for the blank space and two for the transition
@@ -154,9 +157,11 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
         }
 
         float frameIndex = placed.get(INDEX);
+        float max = placed.get(MAX_NUMBER);
         if (halfClick){
             frameIndex -= .5f;
         }
+        if (frameIndex > max) frameIndex += module.getCharacterCount() - max;
         var displayTexture = "block/modular_display/" + module.getDisplayTexture();
 
         float innerX = 0 + INNER_OFFSET;
