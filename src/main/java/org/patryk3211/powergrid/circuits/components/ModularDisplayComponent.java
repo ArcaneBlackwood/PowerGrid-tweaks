@@ -27,6 +27,7 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
     public static final BooleanProperty WIRE_RESET = new BooleanProperty(PowerGrid.MOD_ID, "modular_display_reset").hidden().cast();
     public static final ConstantProperty MIN_CURRENT = new ConstantProperty(PowerGrid.MOD_ID, "modular_display_current", Unit.CURRENT.formatWithPrefixes(.5f).component());
     public static final ConstantProperty RESISTANCE = new ConstantProperty(PowerGrid.MOD_ID, "modular_display_resistance", Unit.RESISTANCE.formatWithPrefixes(25).component());
+    public static final BooleanProperty REMOVE_BLANKING_PAGE = new BooleanProperty(PowerGrid.MOD_ID, "modular_display_blanking_page");
     public static final EnumProperty<DisplayModuleType> CURRENT_MODULE = new EnumProperty<DisplayModuleType>(PowerGrid.MOD_ID, "modular_display_module",
             DisplayModuleType.class, new DisplayModuleType[]{DisplayModuleType.ZERO_TO_NINE, DisplayModuleType.NINE_TO_ZERO, DisplayModuleType.ONE_TO_ZERO, DisplayModuleType.HEXADECIMAL, DisplayModuleType.SYMBOLS, DisplayModuleType.ALPHABET});
     public static final EnumProperty<DyeColor> CURRENT_COLOR = new EnumProperty<DyeColor>(PowerGrid.MOD_ID, "modular_display_text_color", DyeColor.class);
@@ -51,7 +52,7 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
     @Override
     protected void addProperties(ImmutableCollection.Builder<ComponentProperty<?>> properties) {
         super.addProperties(properties);
-        properties.add(CURRENT_MODULE, CURRENT_COLOR, MAX_NUMBER, RESISTANCE, MIN_CURRENT, INDEX, HALF_CLICK, WIRE_RESET, power(25));
+        properties.add(CURRENT_MODULE, CURRENT_COLOR, REMOVE_BLANKING_PAGE, MAX_NUMBER, RESISTANCE, MIN_CURRENT, INDEX, HALF_CLICK, WIRE_RESET, power(25));
     }
 
     @Override
@@ -67,7 +68,7 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
 
         var coilNodeToNegativeCurrent = Math.abs(coilNodeToNegative.current());
         var coilNodeToResetCurrent = Math.abs(coilNodeToReset.current());
-        var charCount = module.getCharacterCount();
+        var charCount = (placed.get(REMOVE_BLANKING_PAGE) ? module.getCharacterCount() - 1 : module.getCharacterCount());
         if (placed.get(MAX_NUMBER) > charCount) placed.set(MAX_NUMBER, (int)charCount);
         charCount = placed.get(MAX_NUMBER);
         var index = placed.get(INDEX);
@@ -162,7 +163,8 @@ public class ModularDisplayComponent extends OrientableComponent implements IRen
             frameIndex -= .5f;
         }
         if (frameIndex > max) frameIndex += module.getCharacterCount() - max;
-        var displayTexture = "block/modular_display/" + module.getDisplayTexture();
+        var displayTexture = "block/modular_display/" + (placed.get(REMOVE_BLANKING_PAGE) ?
+                module.getDisplayTexture() + "noblank" : module.getDisplayTexture());
 
         float innerX = 0 + INNER_OFFSET;
         float innerY = 0 + INNER_UD_OFFSET;

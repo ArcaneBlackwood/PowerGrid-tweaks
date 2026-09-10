@@ -121,6 +121,7 @@ public class PowerGrid {
 		PlayerEvent.CHANGE_DIMENSION.register(PowerGrid::playerChangeDimension);
 		InteractionEvent.RIGHT_CLICK_BLOCK.register(WireItem::useOn);
 		InteractionEvent.RIGHT_CLICK_ITEM.register(WireItem::use);
+    TickEvent.PLAYER_PRE.register(PowerGrid::playerPre);
 	}
 
 	private static void setup() {

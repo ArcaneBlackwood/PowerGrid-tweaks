@@ -551,10 +551,10 @@ public class DeviceScenes {
                 .placeNearTarget()
                 .text("The Input items can be dropped or placed on a Depot under the Electromagnet");
         scene.idle(50);
-        var iron = new ItemStack(Items.IRON_INGOT);
-        scene.world().createItemOnBeltLike(depotPos, Direction.NORTH, iron);
+        var alloy = new ItemStack(AllItems.ANDESITE_ALLOY.asItem());
+        scene.world().createItemOnBeltLike(depotPos, Direction.NORTH, alloy);
         var depotCenter = util.vector().centerOf(depotPos.south());
-        scene.overlay().showControls(depotCenter, Pointing.UP, 30).withItem(iron);
+        scene.overlay().showControls(depotCenter, Pointing.UP, 30).withItem(alloy);
         scene.idle(10);
         var type = ElectromagnetBlockEntity.class;
         scene.world().modifyBlockEntity(magnetPos, type, pte -> pte.getMagnetizingBehaviour()
@@ -582,9 +582,9 @@ public class DeviceScenes {
                 .text("When items are provided on a belt...");
         scene.idle(30);
 
-        var ingot = scene.world().createItemOnBelt(beltPos, Direction.SOUTH, iron);
+        var ingot = scene.world().createItemOnBelt(beltPos, Direction.SOUTH, alloy);
         scene.idle(15);
-        var ingot2 = scene.world().createItemOnBelt(beltPos, Direction.SOUTH, iron);
+        var ingot2 = scene.world().createItemOnBelt(beltPos, Direction.SOUTH, alloy);
         scene.idle(15);
         scene.world().stallBeltItem(ingot, true);
         scene.world().modifyBlockEntity(magnetPos, type, pte -> pte.getMagnetizingBehaviour()
@@ -1733,6 +1733,15 @@ public class DeviceScenes {
         scene.world().modifyBlockEntity(block, ModularDisplayBlockEntity.class, be -> {
             be.modules[0] = new AlphabetLetterModule(0, false, DyeColor.WHITE);
         });
+        scene.idle(70);
+
+        scene.overlay().showText(110)
+                .text("You can click with a wrench on any slot to enable or disable the blanking page for that slot")
+                .placeNearTarget()
+                .attachKeyFrame();
+        scene.idle(50);
+        scene.overlay().showControls(util.vector().of(2.25, 1.75, 2), Pointing.DOWN, 40)
+                .withItem(AllItems.WRENCH.asStack());
         scene.idle(70);
 
         scene.overlay().showText(70)

@@ -62,9 +62,10 @@ public class PlacedComponent {
     public Object customData;
     public boolean destroyed;
 
-    public PlacedComponent(HolderLookup.Provider provider, CompoundTag tag) {
+    public PlacedComponent(HolderLookup.Provider provider, CompoundTag tag, int version) {
         this(get(tag.getString("Id")), tag.getInt("X"), tag.getInt("Y"), tag.contains("UUID") ? tag.getUUID("UUID") : null);
-        component.dataFixup(tag);
+        if(CircuitSchematic.VERSION != version)
+            component.dataFixup(tag, version);
         var propertyMap = tag.getCompound("Properties");
         for(var entry : properties) {
             entry.read(provider, propertyMap);
