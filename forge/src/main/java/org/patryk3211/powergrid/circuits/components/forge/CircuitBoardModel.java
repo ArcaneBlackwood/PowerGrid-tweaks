@@ -45,11 +45,9 @@ import org.patryk3211.powergrid.circuits.circuitboard.CircuitBoardModelQuads;
 import org.patryk3211.powergrid.circuits.components.ComponentModels;
 import org.patryk3211.powergrid.circuits.components.IRenderedComponent;
 import org.patryk3211.powergrid.circuits.components.properties.Orientation;
-import org.patryk3211.powergrid.circuits.schematic.Area;
-import org.patryk3211.powergrid.circuits.schematic.CircuitSchematic;
+import org.patryk3211.powergrid.circuits.schematic.Line;
 import org.patryk3211.powergrid.circuits.schematic.PlacedComponent;
 import org.patryk3211.powergrid.circuits.schematic.Point;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +64,7 @@ public class CircuitBoardModel implements BakedModel {
     public static final Material PAD_SPRITE_ID = new Material(InventoryMenu.BLOCK_ATLAS, PowerGrid.asResource("block/circuit_board_pad"));
 
     public static final ModelProperty<CircuitBoardBlockEntity> ENTITY = new ModelProperty<>();
-    public static final ModelProperty<List<Area>> FRONT_LAYER = new ModelProperty<>();
+    public static final ModelProperty<List<Line>> FRONT_LAYER = new ModelProperty<>();
     public static final ModelProperty<List<Point>> PADS = new ModelProperty<>();
     public static final ModelProperty<List<PlacedComponent>> COMPONENTS = new ModelProperty<>();
 
@@ -131,7 +129,7 @@ public class CircuitBoardModel implements BakedModel {
             // Emit components
             var schematic = circuit.getSchematic();
             return ModelData.builder()
-                    .with(FRONT_LAYER, schematic.calculateAreas(CircuitSchematic.Layer.FRONT))
+                    .with(FRONT_LAYER, schematic.computeLineShades().toList())
                     .with(PADS, schematic.pads().calculatePoints())
                     .with(COMPONENTS, List.copyOf(schematic.components()))
                     .with(ENTITY, circuit)
@@ -195,9 +193,9 @@ public class CircuitBoardModel implements BakedModel {
         }
         if(side == null) {
             if (data.has(FRONT_LAYER)) {
-                var areas = data.get(FRONT_LAYER);
-                for (var area : areas) {
-                    quads.add(emitTrace(area));
+                List<Line> lines = data.get(FRONT_LAYER);
+                for (var line : lines) {
+                    quads.add(emitTrace(line.vertical(), line.position(), line.start(), line.end(), line.shade()));
                 }
             }
             if (data.has(PADS)) {
@@ -226,18 +224,23 @@ public class CircuitBoardModel implements BakedModel {
         return quads;
     }
 
-    public BakedQuad emitTrace(Area area) {
-        float x1 = (float) area.x1() / GRID_TO_GRID_SCALE;
-        float y1 = (float) area.y1() / GRID_TO_GRID_SCALE;
-        float x2 = (float) area.x2() / GRID_TO_GRID_SCALE;
-        float y2 = (float) area.y2() / GRID_TO_GRID_SCALE;
+    public BakedQuad emitTrace(boolean vert, int pos, int start, int end, byte shade) {
+        float scaleInv = 1 / GRID_TO_GRID_SCALE;
+        float x1 = (float) (vert ? pos : start) * scaleInv;
+        float y1 = (float) (vert ? start : pos) * scaleInv;
+        float x2 = (float) (vert ? pos : end) * scaleInv;
+        float y2 = (float) (vert ? end : pos) * scaleInv;
+        float u1 = (float) ((pos & 3) + (shade & 3) * 4) * scaleInv;
+        float u2 = u1 + 1 * scaleInv;
+        float v1 = start * scaleInv;
+        float v2 = end * scaleInv;
 
         return bakery.bakeQuad(
                 new Vector3f(x1 - 8, 2.05f - 8, y1 - 8),
                 new Vector3f(x2 - 8, 2.05f - 8, y2 - 8),
                 new BlockElementFace(
                         null, BlockElementFace.NO_TINT, "circuit_board_trace",
-                        new BlockFaceUV(new float[] { x1, y1, x2, y2 }, 0)
+                        new BlockFaceUV(new float[] { u1, v1, u2, v2}, 0)
                 ),
                 copperSprite,
                 Direction.UP,

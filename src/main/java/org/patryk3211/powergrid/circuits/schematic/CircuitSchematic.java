@@ -27,10 +27,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.patryk3211.powergrid.PowerGrid;
 import org.patryk3211.powergrid.circuits.components.ViaComponent;
+import org.patryk3211.powergrid.circuits.schematic.Line.Relation;
 import org.patryk3211.powergrid.collections.ModdedItems;
-
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.*;
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_SIZE;
 import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_TO_GRID_SCALE;
 
@@ -408,6 +410,53 @@ public class CircuitSchematic {
         return bundles;
     }
 
+
+
+    public Stream<Line> computeLineShades() {
+        Map<Line, ObjectOpenHashSet<Line.Related>> relations = front.readRelations();
+        List<Net> nets = new ArrayList<>();
+        Map<Line, Net> lineToNet = new HashMap<>();
+
+        {
+            Set<Line> toProcess = relations.keySet().stream()
+                .collect(Collectors.toCollection(ObjectOpenHashSet::new));
+            List<Line> queue = new ArrayList<>();
+            while (!toProcess.isEmpty()) {
+                {
+                    Line next = toProcess.iterator().next();
+                    toProcess.remove(next);
+                    queue.add(next);
+                }
+                Net net = new Net();
+                while (!queue.isEmpty()) {
+                    Line line = queue.removeLast();
+                    net.lines.add(line);
+                    lineToNet.put(line, net);
+                    for (Line.Related relation : relations.get(line)) 
+                        if (relation.relation() == Relation.INTERSECT)
+                            queue.add(relation.line());
+                }
+                nets.add(net);
+            }
+        }
+        for (Net net : nets) {
+            for (Line line : net.lines)
+                for (Line.Related test : relations.get(line))
+                    if (test.relation() == Relation.TOUCHING)
+                        net.touching.add(lineToNet.get(test.line()));
+        }
+        for (Net net : nets) {
+            net.shade = (byte)Integer.numberOfTrailingZeros(net.shade);
+            if (net.shade > 3)
+                throw new IllegalStateException("Could not find free color shade for net.  This shouldnt be possible on a manhattan grid");
+            int mask = ~(1<<net.shade);
+            for (Net touch : net.touching)
+                touch.shade &= mask;
+        }
+        return front.streamLines();
+    }
+
+
     public void clear() {
         front.clear();
         back.clear();
@@ -449,5 +498,12 @@ public class CircuitSchematic {
             var set = layer == Layer.FRONT ? front : back;
             return !set.get(x + y * GRID_SIZE);
         }
+    }
+
+    private static class Net {
+        public Set<Line> lines = new ObjectOpenHashSet<>();
+        public byte shade = 0b1111_1;
+        public Set<Net> touching = new ObjectOpenHashSet<>();
+        public Net() { }
     }
 }

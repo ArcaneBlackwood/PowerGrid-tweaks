@@ -17,10 +17,13 @@ package org.patryk3211.powergrid.circuits.schematic;
 
 import net.minecraft.nbt.LongArrayTag;
 import org.patryk3211.powergrid.PowerGrid;
-
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class CircuitLayer {
     public static final int GRID_SIZE = 16;
@@ -31,6 +34,7 @@ public class CircuitLayer {
     // Mirror data stored in traces; recalculated when necessary
     private final List<Line> verticalLines;
     private final List<Line> horizontalLines;
+    private Object2ObjectOpenHashMap<Line, ObjectOpenHashSet<Line.Related>> relations = null;
 
     public CircuitLayer() {
         traces = new TraceMatrix();
@@ -84,7 +88,7 @@ public class CircuitLayer {
                     start = y;
                 }
                 else if (start != null && !traces.get(x, y, TraceMatrix.TraceDirection.DOWN)) {
-                    verticalLines.add(new Line(true, x, start, y));
+                    verticalLines.add(new Line(true, x, start, y, (byte)0));
                     start = null;
                 }
             }
@@ -102,10 +106,28 @@ public class CircuitLayer {
                     start = x;
                 }
                 else if (start != null && !traces.get(x, y, TraceMatrix.TraceDirection.RIGHT)) {
-                    horizontalLines.add(new Line(false, y, start, x));
+                    horizontalLines.add(new Line(false, y, start, x, (byte)0));
                     start = null;
                 }
             }
+        }
+
+        if (relations != null) recomputeRelations();
+    }
+
+    public void recomputeRelations() {
+        if (relations == null) relations = new Object2ObjectOpenHashMap<>();
+        relations.clear();
+        for (Iterator<Line> lineI = streamLines().iterator(); lineI.hasNext();) {
+            Line line = lineI.next();
+            ObjectOpenHashSet<Line.Related> relate = new ObjectOpenHashSet<>();
+            for (Iterator<Line> testI = streamLines().iterator(); testI.hasNext();) {
+                Line test = testI.next();
+                Line.Relation result = line.getRelation(test);
+                if (result == null) continue;
+                relate.add(new Line.Related(test, result));
+            }
+            relations.put(line, relate);
         }
     }
 
@@ -117,20 +139,41 @@ public class CircuitLayer {
         return Collections.unmodifiableList(horizontalLines);
     }
 
+    public Stream<Line> streamLines() {
+        return Stream.concat(verticalLines.stream(), horizontalLines.stream());
+    }
+
+    public Object2ObjectOpenHashMap<Line, ObjectOpenHashSet<Line.Related>> readRelations() {
+        if (relations == null) recomputeRelations();
+        if (relations.size() != horizontalLines.size() + verticalLines.size())
+            throw new IllegalStateException("Calculated relations key count does not match total line count");
+        return relations;
+    }
     private void addLine(List<Line> lines, boolean vertical, int position, int start, int end) {
         List<Line> overlaps = new ArrayList<>();
         int newStart = start;
         int newEnd = end;
         for (var line : lines) {
-            if (line.vertical() == vertical && line.position() == position &&
-                    start <= line.end() && line.start() <= end) {
+            if (line.vertical() == vertical && line.intersects(vertical, position, start, end)) {
                 overlaps.add(line);
                 newStart = Math.min(newStart, line.start());
                 newEnd = Math.max(newEnd, line.end());
             }
         }
         lines.removeAll(overlaps);
-        lines.add(new Line(vertical, position, newStart, newEnd));
+        Line newLine = new Line(vertical, position, newStart, newEnd, (byte)0);
+        ObjectOpenHashSet<Line.Related> relate = new ObjectOpenHashSet<>();
+        if (relations == null) relations = new Object2ObjectOpenHashMap<>();
+        for (Iterator<Line> testI = streamLines().iterator(); testI.hasNext();) {
+            Line test = testI.next();
+            if (!test.intersects(newLine)) continue;
+            Line.Relation result = newLine.getRelation(test);
+            if (result == null) continue;
+            relate.add(new Line.Related(test, result));
+            relations.get(test).add(new Line.Related(newLine, result));
+        }
+        relations.put(newLine, relate);
+        lines.add(newLine);
     }
 
     public void addVerticalLine(int x, int y1, int y2) {
