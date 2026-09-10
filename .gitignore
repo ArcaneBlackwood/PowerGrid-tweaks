@@ -1,3 +1,9 @@
+#arcane
+.gitignore
+native/
+run/
+build.gradle
+
 # gradle
 
 .gradle/
