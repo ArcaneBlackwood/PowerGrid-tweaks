@@ -15,15 +15,17 @@
  */
 package org.patryk3211.powergrid.circuits.schematic;
 
-import net.minecraft.nbt.LongArrayTag;
-import org.patryk3211.powergrid.PowerGrid;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
+
+import org.patryk3211.powergrid.PowerGrid;
+
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import net.minecraft.nbt.LongArrayTag;
 
 public class CircuitLayer {
     public static final int GRID_SIZE = 16;
@@ -88,7 +90,7 @@ public class CircuitLayer {
                     start = y;
                 }
                 else if (start != null && !traces.get(x, y, TraceMatrix.TraceDirection.DOWN)) {
-                    verticalLines.add(new Line(true, x, start, y, (byte)0));
+                    verticalLines.add(new Line(true, x, start, y));
                     start = null;
                 }
             }
@@ -106,7 +108,7 @@ public class CircuitLayer {
                     start = x;
                 }
                 else if (start != null && !traces.get(x, y, TraceMatrix.TraceDirection.RIGHT)) {
-                    horizontalLines.add(new Line(false, y, start, x, (byte)0));
+                    horizontalLines.add(new Line(false, y, start, x));
                     start = null;
                 }
             }
@@ -146,24 +148,24 @@ public class CircuitLayer {
     public Object2ObjectOpenHashMap<Line, ObjectOpenHashSet<Line.Related>> readRelations() {
         if (relations == null) recomputeRelations();
         if (relations.size() != horizontalLines.size() + verticalLines.size())
-            throw new IllegalStateException("Calculated relations key count does not match total line count");
+            throw new IllegalStateException("Calculated relations key count does not match total line count "+relations.size()+" != "+(horizontalLines.size() + verticalLines.size()));
         return relations;
     }
     private void addLine(List<Line> lines, boolean vertical, int position, int start, int end) {
-        List<Line> overlaps = new ArrayList<>();
+        if (relations == null) recomputeRelations();
         int newStart = start;
         int newEnd = end;
-        for (var line : lines) {
-            if (line.vertical() == vertical && line.intersects(vertical, position, start, end)) {
-                overlaps.add(line);
-                newStart = Math.min(newStart, line.start());
-                newEnd = Math.max(newEnd, line.end());
+        for (Iterator<Line> iter = lines.iterator(); iter.hasNext();) {
+            Line line = iter.next();
+            if (line.vertical == vertical && line.intersects(vertical, position, start, end)) {
+                newStart = Math.min(newStart, line.start);
+                newEnd = Math.max(newEnd, line.end);
+                iter.remove();
+                relations.remove(line);
             }
         }
-        lines.removeAll(overlaps);
-        Line newLine = new Line(vertical, position, newStart, newEnd, (byte)0);
+        Line newLine = new Line(vertical, position, newStart, newEnd);
         ObjectOpenHashSet<Line.Related> relate = new ObjectOpenHashSet<>();
-        if (relations == null) relations = new Object2ObjectOpenHashMap<>();
         for (Iterator<Line> testI = streamLines().iterator(); testI.hasNext();) {
             Line test = testI.next();
             if (!test.intersects(newLine)) continue;
@@ -174,6 +176,8 @@ public class CircuitLayer {
         }
         relations.put(newLine, relate);
         lines.add(newLine);
+        if (relations.size() != horizontalLines.size() + verticalLines.size())
+            throw new IllegalStateException("Calculated relations key count does not match total line count "+relations.size()+" != "+(horizontalLines.size() + verticalLines.size()));
     }
 
     public void addVerticalLine(int x, int y1, int y2) {

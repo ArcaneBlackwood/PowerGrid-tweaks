@@ -15,6 +15,27 @@
  */
 package org.patryk3211.powergrid.circuits.schematic;
 
+import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_SIZE;
+import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_TO_GRID_SCALE;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.patryk3211.powergrid.PowerGrid;
+import org.patryk3211.powergrid.circuits.components.ViaComponent;
+import org.patryk3211.powergrid.circuits.schematic.Line.Relation;
+import org.patryk3211.powergrid.collections.ModdedItems;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -23,18 +44,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.patryk3211.powergrid.PowerGrid;
-import org.patryk3211.powergrid.circuits.components.ViaComponent;
-import org.patryk3211.powergrid.circuits.schematic.Line.Relation;
-import org.patryk3211.powergrid.collections.ModdedItems;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_SIZE;
-import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_TO_GRID_SCALE;
 
 public class CircuitSchematic {
     // This value should be updated when component properties change, to allow for old schematics to be migrated.
@@ -440,7 +449,7 @@ public class CircuitSchematic {
                     net.lines.add(line);
                     lineToNet.put(line, net);
                     for (Line.Related relation : relations.get(line)) 
-                        if (relation.relation() == Relation.INTERSECT)
+                        if (relation.relation() == Relation.INTERSECT && toProcess.remove(relation.line()))
                             queue.add(relation.line());
                 }
                 nets.add(net);
@@ -457,8 +466,15 @@ public class CircuitSchematic {
             if (net.shade > 3)
                 throw new IllegalStateException("Could not find free color shade for net.  This shouldnt be possible on a manhattan grid");
             int mask = ~(1<<net.shade);
-            for (Net touch : net.touching)
+            PowerGrid.LOGGER.info("Net#"+net.hashCode()+"["+net.lines.size()+"] touching["+net.touching.size()+"]");
+            for (Line line : net.lines) {
+                line.shade = net.shade;
+                PowerGrid.LOGGER.info("  "+line);
+            }
+            for (Net touch : net.touching) {
+                PowerGrid.LOGGER.info("  Net#"+net.hashCode());
                 touch.shade &= mask;
+            }
         }
         return front.streamLines();
     }

@@ -20,32 +20,49 @@ package org.patryk3211.powergrid.circuits.schematic;
  * @param end
  * @param shade
  */
-public record Line(boolean vertical, int position, int start, int end, byte shade) {
-	public boolean intersects(final Line other) {
-		if (this == other) return false;
-		if (other.vertical == vertical)
-			return other.position == position && other.start <= end && start <= other.end;
-		return other.position >= start && other.position <= end
-			&& position >= other.start && position <= other.end;
+public class Line {
+	public boolean vertical;
+	public int position, start, end;
+	public byte shade = -1;
+
+
+	public Line() {}
+	public Line(boolean vertical, int position, int start, int end) {
+		this.vertical = vertical;
+		this.position = position;
+		this.start = start;
+		this.end = end;
 	}
-	public boolean touches(final Line other) {
-		if (this == other) return false;
-		if (other.vertical == vertical) {
-			int diff = other.position - position;
-			if (diff == -1 || diff == 1) return other.position >= start && other.position <= end
-			&& position >= other.start && position <= other.end;
-			return diff == 0 && (other.start == end+1 || start == other.end+1);
-		}
-		if (start == other.position+1 || other.position == end+1) //Is ontop one another
-			return position >= other.start && position <= other.end; //Check position falls inside other
-		if (other.start == position+1 || position == other.end+1)
-			return other.position >= start && other.position <= end;
-		return false;
-	}
-	public Relation getRelation(final Line other) {
-		if (intersects(other)) return Relation.INTERSECT;
-		if (touches(other)) return Relation.TOUCHING;
-		return null;
+
+
+	public Relation getRelation(final Line other) { //
+		if (this.equals(other)) return null;
+		if (vertical == other.vertical) { //Parallel
+			if (start > other.end && end < other.start) return null; //Doesnt overlap
+			if (position+1 == other.position || position-1 == other.position) //Above one another
+				return Relation.TOUCHING;
+
+			if (position != other.position) return null; //Not aligned
+			if (end == other.start) return Relation.CLIP_START;
+			if (start == other.end+1 || end+1 == other.start) return Relation.TOUCHING;
+			return Relation.INTERSECT;
+		} //else Perpindicular
+		
+		boolean thisPosOutside = position < other.start || position > other.end;
+		boolean otherPosOutside = start > other.position || end < other.position;
+		if (thisPosOutside && otherPosOutside) return null; //Cant intersect at all
+
+		if (otherPosOutside) //This pos inside, check if other pos right next to
+			return start-1 == other.position || end+1 == other.position ? //Ends touching other
+				Relation.TOUCHING : null;
+		if (thisPosOutside) //Other pos inside, check if this pos right next to
+			return position-1 == other.end || position+1 == other.end ? //Touching other ends
+				Relation.TOUCHING : null;
+		//else Must intersect somewhere(no pos outside)
+
+		if (vertical && start == other.position) return Relation.CLIP_START;
+		if (vertical && end == other.position) return Relation.CLIP_END;
+		return Relation.INTERSECT; //Doesnt have priority or start/end not clipped by other
 	}
 	public boolean intersects(boolean vertical2, int position2, int start2, int end2) {
 		if (vertical2 == vertical)
@@ -53,23 +70,40 @@ public record Line(boolean vertical, int position, int start, int end, byte shad
 		return position2 >= start && position2 <= end
 			&& position >= start2 && position <= end2;
 	}
+
+
 	@Override
-	public final int hashCode() {
-		return (vertical?1:0) | (shade << 1) | (position << 8) | (start << 16) | (start << 24);
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Line[vert=");
+		sb.append(vertical).append(", pos=").append(position).append(", start=")
+			.append(start).append(", end=").append(end).append(", shade=").append(shade);
+		sb.append("]#").append(hashCode());
+		return sb.toString();
 	}
+	@Override
+	public final boolean equals(Object obj) {
+		if (!(obj instanceof Line other)) return false;
+		return other == this ||
+			(vertical == other.vertical && position == other.position && start == other.start
+			&& end == other.end);
+	}
+
+
+
 	public static enum Relation {
-		TOUCHING, INTERSECT;
-	}
-	public static record Related(Line line, Relation relation) {
-		@Override
-		public final boolean equals(Object obj) {
-			return obj == this
-				|| (obj instanceof Related that && that.line == line)
-				|| (obj instanceof Line thatLine && thatLine == line);
+		TOUCHING, INTERSECT,
+		/**
+		 * This line start intersect with argument line.  Vertical or first(when both parallel) have clip prioroty
+		 */
+		CLIP_START,
+		/**
+		 * This line end intersect with argument line.  Vertical or first(when both parallel) have clip prioroty
+		 */
+		CLIP_END;
+		public boolean isIntersect() {
+			return this != TOUCHING;
 		}
-		@Override
-		public final int hashCode() {
-			return line == null ? 0 : line.hashCode();
-		}
 	}
+	public static record Related(Line line, Relation relation) { }
 }

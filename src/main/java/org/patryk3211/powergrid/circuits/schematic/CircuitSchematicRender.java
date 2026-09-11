@@ -18,8 +18,6 @@ package org.patryk3211.powergrid.circuits.schematic;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.GuiGraphics;
-import org.patryk3211.powergrid.collections.ModdedConfigs;
-
 import java.util.List;
 
 import static org.patryk3211.powergrid.circuits.editor.CircuitDesignTableEditScreen.TRACE_PADDING;
@@ -44,7 +42,7 @@ public class CircuitSchematicRender {
     // It's not the most efficient, but it gets the job done. The only way to make this better is to dynamically create textures.
     public static void renderLayer(CircuitLayer layer, GuiGraphics ctx, int xOffset, int yOffset, int scale, int color) {
         for (var line : layer.readVerticalLines()) {
-            drawTrace(line.position(), line.start(), line.position(), line.end(), ctx, xOffset, yOffset, scale, color);
+            drawTrace(line.position, line.start, line.position, line.end, ctx, xOffset, yOffset, scale, color);
         }
 
         int startX, startY, endY;
@@ -52,27 +50,27 @@ public class CircuitSchematicRender {
         for (var line : layer.readHorizontalLines()) {
             if ((color & 0xFF000000) != 0xFF000000) {
                 // Overlaps will be visible for non-opaque colors, so trade off more fill calls for avoiding overlaps
-                startX = layer.hasVerticalTrace(line.start(), line.position()) ?
-                        line.start() * scale + scale + xOffset - TRACE_PADDING :
-                        line.start() * scale + xOffset + TRACE_PADDING;
+                startX = layer.hasVerticalTrace(line.start, line.position) ?
+                        line.start * scale + scale + xOffset - TRACE_PADDING :
+                        line.start * scale + xOffset + TRACE_PADDING;
 
-                startY = line.position() * scale + yOffset + TRACE_PADDING;
-                endY = line.position() * scale + scale + yOffset - TRACE_PADDING;
+                startY = line.position * scale + yOffset + TRACE_PADDING;
+                endY = line.position * scale + scale + yOffset - TRACE_PADDING;
 
-                for (int i = line.start() + 1; i <= line.end(); i++) {
-                    if (layer.hasVerticalTrace(i, line.position())) {
+                for (int i = line.start + 1; i <= line.end; i++) {
+                    if (layer.hasVerticalTrace(i, line.position)) {
                         // Flush line, skip the center of this cell, and start a new line
                         ctx.fill(startX, startY, i * scale + xOffset + TRACE_PADDING, endY, color);
                         startX = i * scale + scale + xOffset - TRACE_PADDING;
                     }
-                    else if (i == line.end()) {
+                    else if (i == line.end) {
                         ctx.fill(startX, startY, i * scale + scale + xOffset - TRACE_PADDING, endY, color);
                     }
                 }
             }
             else {
                 // Overlaps with vertical lines are invisible for opaque colors
-                drawTrace(line.start(), line.position(), line.end(), line.position(), ctx, xOffset, yOffset, scale, color);
+                drawTrace(line.start, line.position, line.end, line.position, ctx, xOffset, yOffset, scale, color);
             }
         }
     }

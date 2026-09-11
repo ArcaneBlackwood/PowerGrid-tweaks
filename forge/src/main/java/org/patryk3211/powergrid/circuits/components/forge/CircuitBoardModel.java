@@ -195,7 +195,7 @@ public class CircuitBoardModel implements BakedModel {
             if (data.has(FRONT_LAYER)) {
                 List<Line> lines = data.get(FRONT_LAYER);
                 for (var line : lines) {
-                    quads.add(emitTrace(line.vertical(), line.position(), line.start(), line.end(), line.shade()));
+                    quads.add(emitTrace(line.vertical, line.position, line.start, line.end, line.shade));
                 }
             }
             if (data.has(PADS)) {
@@ -225,43 +225,53 @@ public class CircuitBoardModel implements BakedModel {
     }
 
     public BakedQuad emitTrace(boolean vert, int pos, int start, int end, byte shade) {
-        float scaleInv = 1 / GRID_TO_GRID_SCALE;
-        float x1 = (float) (vert ? pos : start) * scaleInv;
-        float y1 = (float) (vert ? start : pos) * scaleInv;
-        float x2 = (float) (vert ? pos : end) * scaleInv;
-        float y2 = (float) (vert ? end : pos) * scaleInv;
+        float scaleInv = 1f / GRID_TO_GRID_SCALE;
+
+        float x1 = (float) pos * scaleInv - 8;
+        float y1 = (float) start * scaleInv - 8;
+        float x2 = (float) (pos+1)  * scaleInv - 8;
+        float y2 = (float) (end+1) * scaleInv - 8;
+        float z = -5.96875f;
+
         float u1 = (float) ((pos & 3) + (shade & 3) * 4) * scaleInv;
-        float u2 = u1 + 1 * scaleInv;
         float v1 = start * scaleInv;
-        float v2 = end * scaleInv;
+        float u2 = u1 + 1 * scaleInv;
+        float v2 = (end+1) * scaleInv;
 
         return bakery.bakeQuad(
-                new Vector3f(x1 - 8, 2.05f - 8, y1 - 8),
-                new Vector3f(x2 - 8, 2.05f - 8, y2 - 8),
-                new BlockElementFace(
-                        null, BlockElementFace.NO_TINT, "circuit_board_trace",
-                        new BlockFaceUV(new float[] { u1, v1, u2, v2}, 0)
-                ),
-                copperSprite,
-                Direction.UP,
-                BlockModelRotation.X0_Y0,
-                null,
-                true
+            vert ? new Vector3f(x1, z, y1) : new Vector3f(y1, z, x1),
+            vert ? new Vector3f(x2, z, y2) : new Vector3f(y2, z, x2),
+            new BlockElementFace(
+                null, BlockElementFace.NO_TINT, "circuit_board_trace",
+                new BlockFaceUV(new float[] { u1, v1, u2, v2}, vert ? 0 : 90)
+            ),
+            copperSprite,
+            Direction.UP,
+            BlockModelRotation.X0_Y0,
+            null,
+            true
         );
     }
 
     public BakedQuad emitPad(Point point) {
-        float x1 = point.x(), y1 = point.y(), x2 = x1 + 1, y2 = y1 + 1;
-        x1 /= GRID_TO_GRID_SCALE;
-        x2 /= GRID_TO_GRID_SCALE;
-        y1 /= GRID_TO_GRID_SCALE;
-        y2 /= GRID_TO_GRID_SCALE;
+        float scaleInv = 1f / GRID_TO_GRID_SCALE;
+        int shade = 
+            ((point.x() & 1) ^ ((point.y() & 2) >> 1)) * 2 +
+            ((point.y() & 1) ^ ((point.x() & 2) >> 1));
+        float pixel = 1 / scaleInv;
+
+        float x = point.x() * scaleInv - 8;
+        float y = point.y() * scaleInv - 8;
+
+        float u = (shade * 4 + ((point.x() & 4) >> 1)) * scaleInv;
+        float v = point.y() * scaleInv;
+        
         return bakery.bakeQuad(
-                new Vector3f(x1 - 8, 2.05f - 8, y1 - 8),
-                new Vector3f(x2 - 8, 2.05f - 8, y2 - 8),
+                new Vector3f(x, -5.9375f, y),
+                new Vector3f(x+pixel, -5.9375f, y+pixel),
                 new BlockElementFace(
                         null, BlockElementFace.NO_TINT, "circuit_board_trace",
-                        new BlockFaceUV(new float[] { x1, y1, x2, y2 }, 0)
+                        new BlockFaceUV(new float[] { u, v, u+pixel, v+pixel }, 0)
                 ),
                 padSprite,
                 Direction.UP,
