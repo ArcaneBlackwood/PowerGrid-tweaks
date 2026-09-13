@@ -29,6 +29,7 @@ public class ContinuousSound extends AbstractTickableSoundInstance {
     private final BooleanSupplier stillPlaying;
     private final float targetVolume;
     private final float fadeSpeed;
+    private int ttl;
 
     protected ContinuousSound(SoundEvent event, SoundScape scape, float sharedPitch, float relativeVolume) {
         super(event, SoundSource.AMBIENT, SoundInstance.createUnseededRandom());
@@ -98,6 +99,10 @@ public class ContinuousSound extends AbstractTickableSoundInstance {
         return scape != null ? scape.getMeanPos().z : z;
     }
 
+    public void keepAlive() {
+        ttl = 3;
+    }
+
     @Override
     public void tick() {
         if (stillPlaying == null)
@@ -109,6 +114,8 @@ public class ContinuousSound extends AbstractTickableSoundInstance {
         else if (volume > target)
             volume = Math.max(target, volume - fadeSpeed * 2f);
         if (!on && volume <= 0.001f)
+            remove();
+        if(--ttl <= 0)
             remove();
     }
 }

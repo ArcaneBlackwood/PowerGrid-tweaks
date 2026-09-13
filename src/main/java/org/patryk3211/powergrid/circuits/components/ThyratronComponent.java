@@ -263,6 +263,8 @@ public class ThyratronComponent extends MirrorableComponent implements IRendered
                         pos.x, pos.y, pos.z, HUM_VOLUME, 1.0f, HUM_FADE_TICKS,
                         () -> !placed.destroyed && placed.get(LIT) && data.humTicks >= HUM_DELAY_TICKS);
                 sounds.play(data.buzz);
+            } else if(data.buzz != null) {
+                data.buzz.keepAlive();
             }
         } else if (data.buzz != null && data.buzz.isStopped()) {
             data.buzz = null;
