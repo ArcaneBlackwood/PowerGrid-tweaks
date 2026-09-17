@@ -22,9 +22,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.patryk3211.powergrid.PowerGrid;
-
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import org.patryk3211.powergrid.circuits.schematic.Line.Relations;
 import net.minecraft.nbt.LongArrayTag;
 
 public class CircuitLayer {
@@ -36,7 +34,7 @@ public class CircuitLayer {
     // Mirror data stored in traces; recalculated when necessary
     private final List<Line> verticalLines;
     private final List<Line> horizontalLines;
-    private Object2ObjectOpenHashMap<Line, ObjectOpenHashSet<Line.Related>> relations = null;
+    private Relations relations = null;
 
     public CircuitLayer() {
         traces = new TraceMatrix();
@@ -114,22 +112,28 @@ public class CircuitLayer {
             }
         }
 
-        if (relations != null) recomputeRelations();
+        recomputeRelations();
     }
 
     public void recomputeRelations() {
-        if (relations == null) relations = new Object2ObjectOpenHashMap<>();
+        int vertSize = verticalLines.size(), totalSize = vertSize + horizontalLines.size();
+        if (relations == null) relations = new Relations(totalSize);
         relations.clear();
-        for (Iterator<Line> lineI = streamLines().iterator(); lineI.hasNext();) {
-            Line line = lineI.next();
-            ObjectOpenHashSet<Line.Related> relate = new ObjectOpenHashSet<>();
-            for (Iterator<Line> testI = streamLines().iterator(); testI.hasNext();) {
-                Line test = testI.next();
+        for (int i = 0; i < totalSize; i++) {
+            Line line = i < vertSize ? verticalLines.get(i) : horizontalLines.get(i-vertSize);
+            relations.put(line, new Relations.Entry());
+        }
+        for (int i = 0; i < totalSize-1; i++) {
+            Line line = i < vertSize ? verticalLines.get(i) : horizontalLines.get(i-vertSize);
+            Relations.Entry relate = relations.get(line);
+            
+            for (int j = i+1; j < totalSize; j++) {
+                Line test = j < vertSize ? verticalLines.get(j) : horizontalLines.get(j-vertSize);
                 Line.Relation result = line.getRelation(test);
-                if (result == null) continue;
-                relate.add(new Line.Related(test, result));
+                if (result.isNone()) continue;
+                relate.put(test, result);
+                relations.get(test).put(line, result.contextInvert());
             }
-            relations.put(line, relate);
         }
     }
 
@@ -145,7 +149,7 @@ public class CircuitLayer {
         return Stream.concat(verticalLines.stream(), horizontalLines.stream());
     }
 
-    public Object2ObjectOpenHashMap<Line, ObjectOpenHashSet<Line.Related>> readRelations() {
+    public Relations readRelations() {
         if (relations == null) recomputeRelations();
         if (relations.size() != horizontalLines.size() + verticalLines.size())
             throw new IllegalStateException("Calculated relations key count does not match total line count "+relations.size()+" != "+(horizontalLines.size() + verticalLines.size()));
@@ -157,7 +161,8 @@ public class CircuitLayer {
         int newEnd = end;
         for (Iterator<Line> iter = lines.iterator(); iter.hasNext();) {
             Line line = iter.next();
-            if (line.vertical == vertical && line.intersects(vertical, position, start, end)) {
+            if (line.vertical == vertical && line.position == position &&
+                    start <= line.end && line.start <= end) {
                 newStart = Math.min(newStart, line.start);
                 newEnd = Math.max(newEnd, line.end);
                 iter.remove();
@@ -165,14 +170,14 @@ public class CircuitLayer {
             }
         }
         Line newLine = new Line(vertical, position, newStart, newEnd);
-        ObjectOpenHashSet<Line.Related> relate = new ObjectOpenHashSet<>();
-        for (Iterator<Line> testI = streamLines().iterator(); testI.hasNext();) {
-            Line test = testI.next();
-            if (!test.intersects(newLine)) continue;
-            Line.Relation result = newLine.getRelation(test);
-            if (result == null) continue;
-            relate.add(new Line.Related(test, result));
-            relations.get(test).add(new Line.Related(newLine, result));
+        Relations.Entry relate = new Relations.Entry();
+        int vertSize = verticalLines.size(), totalSize = vertSize + horizontalLines.size();
+        for (int i = 0; i < totalSize; i++) {
+            Line test = i < vertSize ? verticalLines.get(i) : horizontalLines.get(i-vertSize);
+            Line.Relation relationTest = test.getRelation(newLine);
+            if (relationTest.isNone()) continue;
+            relate.put(test, relationTest);
+            relations.get(test).put(newLine, relationTest.contextInvert());
         }
         relations.put(newLine, relate);
         lines.add(newLine);

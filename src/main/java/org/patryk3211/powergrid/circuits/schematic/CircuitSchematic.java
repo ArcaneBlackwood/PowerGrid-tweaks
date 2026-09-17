@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 package org.patryk3211.powergrid.circuits.schematic;
-
 import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_SIZE;
 import static org.patryk3211.powergrid.circuits.schematic.CircuitLayer.GRID_TO_GRID_SCALE;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,9 +29,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.patryk3211.powergrid.PowerGrid;
 import org.patryk3211.powergrid.circuits.components.ViaComponent;
+import org.patryk3211.powergrid.circuits.schematic.Line.Clip;
 import org.patryk3211.powergrid.circuits.schematic.Line.Relation;
 import org.patryk3211.powergrid.collections.ModdedItems;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -249,7 +248,7 @@ public class CircuitSchematic {
         return stack;
     }
 
-    private boolean getAreaState(CircuitLayer layer, int x, int y) {
+    /*private boolean getAreaState(CircuitLayer layer, int x, int y) {
         // TODO: Using hasTrace here means rendering traces in the world will ignore directions & paint full pixels
         return layer.hasTrace(x, y);
     }
@@ -294,7 +293,7 @@ public class CircuitSchematic {
         }
 
         return areas;
-    }
+    }*/
 
     public boolean canPlace(PlacedComponent component, int x, int y) {
         if(x < 0 || y < 0)
@@ -429,9 +428,12 @@ public class CircuitSchematic {
 
 
     public Stream<Line> computeLineShades() {
-        Map<Line, ObjectOpenHashSet<Line.Related>> relations = front.readRelations();
+        Line.Relations relations = front.readRelations();
         List<Net> nets = new ArrayList<>();
-        Map<Line, Net> lineToNet = new HashMap<>();
+        Reference2ObjectOpenHashMap<Line, Net> lineToNet = new Reference2ObjectOpenHashMap<>();
+        for (Line line : relations.keySet()) {
+            line.sizeCut = Clip.NONE;
+        }
 
         {
             Set<Line> toProcess = relations.keySet().stream()
@@ -448,35 +450,106 @@ public class CircuitSchematic {
                     Line line = queue.removeLast();
                     net.lines.add(line);
                     lineToNet.put(line, net);
-                    for (Line.Related relation : relations.get(line)) 
-                        if (relation.relation() == Relation.INTERSECT && toProcess.remove(relation.line()))
-                            queue.add(relation.line());
+                    for (var relation : relations.get(line).entrySet()) {
+                        Line test = relation.getKey();
+                        Relation type = relation.getValue();
+                        line.sizeCut = line.sizeCut.combine(type.getClip());
+                        test.sizeCut = test.sizeCut.combine(type.contextInvert().getClip());
+                        if (type.isTouch()) {
+                            net.linesTouching.add(test);
+                        } else if (type.isIntersect() && toProcess.remove(test)) {
+                            queue.add(test);
+                        }
+                    }
                 }
                 nets.add(net);
             }
         }
         for (Net net : nets) {
+            net.touching = new ReferenceOpenHashSet<>();
+            for (Line line : net.linesTouching)
+                net.touching.add(lineToNet.get(line));
+            net.linesTouching = null;
+        }
+
+        if (!shadeLines(nets))
+            PowerGrid.LOGGER.error("Could not color nets with 4 shades", new IllegalStateException());
+        for (Net net : nets)
             for (Line line : net.lines)
-                for (Line.Related test : relations.get(line))
-                    if (test.relation() == Relation.TOUCHING)
-                        net.touching.add(lineToNet.get(test.line()));
-        }
-        for (Net net : nets) {
-            net.shade = (byte)Integer.numberOfTrailingZeros(net.shade);
-            if (net.shade > 3)
-                throw new IllegalStateException("Could not find free color shade for net.  This shouldnt be possible on a manhattan grid");
-            int mask = ~(1<<net.shade);
-            PowerGrid.LOGGER.info("Net#"+net.hashCode()+"["+net.lines.size()+"] touching["+net.touching.size()+"]");
-            for (Line line : net.lines) {
-                line.shade = net.shade;
-                PowerGrid.LOGGER.info("  "+line);
-            }
-            for (Net touch : net.touching) {
-                PowerGrid.LOGGER.info("  Net#"+net.hashCode());
-                touch.shade &= mask;
-            }
-        }
+                line.shade = net.shade == 0b1_1111 ? 0 : net.shade;
         return front.streamLines();
+    }
+    private static boolean shadeLines(List<Net> nets) {
+        final int count = nets.size();
+        if (count == 0) return true;
+
+        Net[] stackNet = new Net[count];
+        byte[] stackColor = new byte[count];
+
+        int depth = 0;
+
+        while (depth >= 0) {
+            Net best = null;
+            int bestSaturation = -1;
+            int bestDegree = -1;
+
+            for (Net net : nets) {
+                if (net.shade != 0b1_1111) continue;
+
+                int used = 0;
+                for (Net touch : net.touching) {
+                    byte shade = touch.shade;
+                    if (shade < 4)
+                    used |= 1 << shade;
+                }
+
+                int saturation = Integer.bitCount(used);
+                int degree = net.touching.size();
+
+                if (saturation > bestSaturation ||
+                        saturation == bestSaturation && degree > bestDegree) {
+                    best = net;
+                    bestSaturation = saturation;
+                    bestDegree = degree;
+
+                    if (saturation == 4)
+                    break;
+                }
+            }
+
+            if (best == null)
+                return true;
+
+            int used = 0;
+            for (Net touch : best.touching) {
+                byte shade = touch.shade;
+                if (shade < 4)
+                    used |= 1 << shade;
+            }
+
+            int shade = stackColor[depth];
+
+            while (shade < 4 && (used & (1 << shade)) != 0)
+                shade++;
+
+            if (shade < 4) {
+                best.shade = (byte)shade;
+                stackNet[depth] = best;
+                stackColor[depth] = (byte)(shade + 1);
+                depth++;
+                continue;
+            }
+
+            stackColor[depth] = 0;
+
+            if (depth == 0)
+                return false;
+
+            depth--;
+            stackNet[depth].shade = 0b1_1111;
+        }
+
+        return false;
     }
 
 
@@ -524,9 +597,10 @@ public class CircuitSchematic {
     }
 
     private static class Net {
-        public Set<Line> lines = new ObjectOpenHashSet<>();
+        public ReferenceOpenHashSet<Line> lines = new ReferenceOpenHashSet<>();
+        public ReferenceOpenHashSet<Line> linesTouching = new ReferenceOpenHashSet<>();
         public byte shade = 0b1111_1;
-        public Set<Net> touching = new ObjectOpenHashSet<>();
+        public ReferenceOpenHashSet<Net> touching;
         public Net() { }
     }
 }

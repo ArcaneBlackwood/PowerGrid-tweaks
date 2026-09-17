@@ -11,9 +11,10 @@
  * distributed under the License is distributed on an "AS IS" BASIS, 
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the License.return [$1];
  */
 package org.patryk3211.powergrid.circuits.schematic;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 
 /**
  * @param start Include
@@ -24,6 +25,7 @@ public class Line {
 	public boolean vertical;
 	public int position, start, end;
 	public byte shade = -1;
+	public Clip sizeCut = Clip.NONE;
 
 
 	public Line() {}
@@ -35,40 +37,67 @@ public class Line {
 	}
 
 
-	public Relation getRelation(final Line other) { //
-		if (this.equals(other)) return null;
-		if (vertical == other.vertical) { //Parallel
-			if (start > other.end && end < other.start) return null; //Doesnt overlap
-			if (position+1 == other.position || position-1 == other.position) //Above one another
-				return Relation.TOUCHING;
+	public Relation getRelation(final Line that) {
+		if (equals(that)) return Relation.NONE;
+		final boolean thisSize1 = end == start;
+		final boolean otherSize1 = that.end == that.start;
+		if (thisSize1 && otherSize1 && position == that.start && that.position == start)
+			return Relation.NONE; //Should be impossible, check anyway
 
-			if (position != other.position) return null; //Not aligned
-			if (end == other.start) return Relation.CLIP_START;
-			if (start == other.end+1 || end+1 == other.start) return Relation.TOUCHING;
-			return Relation.INTERSECT;
-		} //else Perpindicular
-		
-		boolean thisPosOutside = position < other.start || position > other.end;
-		boolean otherPosOutside = start > other.position || end < other.position;
-		if (thisPosOutside && otherPosOutside) return null; //Cant intersect at all
+		if (vertical == that.vertical) {
+			if (position == that.position) { //Same position
+				if (end == that.start)
+					return Relation.CLIP_END; //This end clipped by first start
+				if (start == that.end)
+					return Relation.CLIP_END_OTHER; //Other end clipped by start
+				if (start == that.end + 1 || end + 1 == that.start)
+					return Relation.TOUCHING; //End or start just next to other
+			}
+			if (start > that.end || end < that.start)
+				return Relation.NONE; //Not overlapping
+			if (position == that.position)
+				return Relation.INTERSECT; //Overlapping and same position
+			if (position + 1 == that.position || position - 1 == that.position)
+				return Relation.TOUCHING; //Above one another and overlappig
+			return Relation.NONE;
+		}
 
-		if (otherPosOutside) //This pos inside, check if other pos right next to
-			return start-1 == other.position || end+1 == other.position ? //Ends touching other
-				Relation.TOUCHING : null;
-		if (thisPosOutside) //Other pos inside, check if this pos right next to
-			return position-1 == other.end || position+1 == other.end ? //Touching other ends
-				Relation.TOUCHING : null;
-		//else Must intersect somewhere(no pos outside)
+		final boolean thisPosOutside =
+			position < that.start ||
+			position > that.end;
+		final boolean otherPosOutside =
+			start > that.position ||
+			end < that.position;
 
-		if (vertical && start == other.position) return Relation.CLIP_START;
-		if (vertical && end == other.position) return Relation.CLIP_END;
-		return Relation.INTERSECT; //Doesnt have priority or start/end not clipped by other
-	}
-	public boolean intersects(boolean vertical2, int position2, int start2, int end2) {
-		if (vertical2 == vertical)
-			return position2 == position && start2 <= end && start <= end2;
-		return position2 >= start && position2 <= end
-			&& position >= start2 && position <= end2;
+		if (thisPosOutside && otherPosOutside) return Relation.NONE;
+
+		if (otherPosOutside)//This pos falls inside of other bounds
+			return start - 1 == that.position ||
+				end + 1 == that.position
+				? Relation.TOUCHING
+				: Relation.NONE;
+		if (thisPosOutside)//Other pos falls inside of this bounds
+			return position + 1 == that.start ||
+				position - 1 == that.end
+				? Relation.TOUCHING
+				: Relation.NONE;
+
+		if (vertical) {//This has priority
+			if (start == that.position)
+				return Relation.CLIP_START;
+			if (end == that.position)
+				return Relation.CLIP_END;
+		}
+		if (that.start == position)
+			return Relation.CLIP_START_OTHER;
+		if (that.end == position)
+			return Relation.CLIP_END_OTHER;
+		if (start == that.position)
+			return Relation.CLIP_START;
+		if (end == that.position)
+			return Relation.CLIP_END;
+
+		return Relation.INTERSECT;
 	}
 
 
@@ -76,8 +105,8 @@ public class Line {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Line[vert=");
-		sb.append(vertical).append(", pos=").append(position).append(", start=")
-			.append(start).append(", end=").append(end).append(", shade=").append(shade);
+		sb.append(vertical).append(", pos=").append(position).append(", start=").append(start)
+		.append(", end=").append(end).append(", shade=").append(shade).append(", cut=").append(sizeCut);
 		sb.append("]#").append(hashCode());
 		return sb.toString();
 	}
@@ -91,19 +120,77 @@ public class Line {
 
 
 
+	public static enum Clip {
+		NONE(0,0), START(1,0), BOTH(1,-1), END(0,-1);
+		private byte start, end;
+		private Clip(int start, int end) {
+			this.start = (byte)start;
+			this.end = (byte)end;
+		}
+		public int getStart(Line line) {
+			return line.start + this.start;
+		}
+		public int getEnd(Line line) {
+			return line.end + this.end;
+		}
+		public Clip combine(Clip other) {
+			if (other == null || other == NONE) return this;
+			if (this == NONE || this == other) return other;
+			return BOTH; 
+		}
+	}
 	public static enum Relation {
-		TOUCHING, INTERSECT,
+		NONE(false),
+		TOUCHING(false),
+		INTERSECT(true),
 		/**
 		 * This line start intersect with argument line.  Vertical or first(when both parallel) have clip prioroty
 		 */
-		CLIP_START,
+		CLIP_START(true, Clip.START),
 		/**
 		 * This line end intersect with argument line.  Vertical or first(when both parallel) have clip prioroty
 		 */
-		CLIP_END;
+		CLIP_END(true, Clip.END),
+		CLIP_START_OTHER(true),
+		CLIP_END_OTHER(true);
+
+		private final boolean isIntersect;
+		private final Clip clip;
+		private Relation(boolean isIntersect, Clip clip) {
+			this.isIntersect = isIntersect;
+			this.clip = clip;
+		}
+		private Relation(boolean isIntersect) {
+			this.isIntersect = isIntersect;
+			this.clip = Clip.NONE;
+		}
+
 		public boolean isIntersect() {
-			return this != TOUCHING;
+			return isIntersect;
+		}
+		public boolean isNone() {
+			return this == NONE;
+		}
+		public boolean isTouch() {
+			return this == TOUCHING;
+		}
+		public Clip getClip() {
+			return clip;
+		}
+		public Relation contextInvert() {
+			return switch(this) {
+				case CLIP_START -> CLIP_START_OTHER;
+				case CLIP_END -> CLIP_END_OTHER;
+				case CLIP_START_OTHER -> CLIP_START;
+				case CLIP_END_OTHER -> CLIP_END;
+				default -> this;
+			};
 		}
 	}
-	public static record Related(Line line, Relation relation) { }
+	public static class Relations extends Reference2ObjectOpenHashMap<Line, Relations.Entry> {
+		public Relations(int initialSize) {
+			super(initialSize);
+		}
+		public static class Entry extends Reference2ObjectOpenHashMap<Line, Relation> {}
+	}
 }

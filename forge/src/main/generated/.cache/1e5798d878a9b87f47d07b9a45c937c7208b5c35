@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-15T23:12:42.512274305	Power Grid's Crafting Recipes
+// 1.21.1	2026-09-17T12:20:00.743926572	Power Grid's Crafting Recipes
 82c6a0904e807b623e2b1432dce7900041a43dd8 data/create/recipe/crafting/light_cord_patterning.json
 d1f5f2aea4a18e4ab2d60b25f4c2c41c78dfc52b data/powergrid/advancement/recipes/misc/crafting/alarm_bell.json
 bc89c890da8397ac00e80e753905590888f52a6a data/powergrid/advancement/recipes/misc/crafting/barretter_tube.json
@@ -43,6 +43,7 @@ b9565a243535cb74f9253fe20abadbff7a55dc67 data/powergrid/advancement/recipes/misc
 4454fe721dffabdd285759165510ac2d116371cc data/powergrid/advancement/recipes/misc/crafting/multimeter.json
 1f0c8e829e0d614930d6fbf0c137eaf1219cceea data/powergrid/advancement/recipes/misc/crafting/mv_switch.json
 34f53fb5533966ce2e83909acb6b82ab5ad9db28 data/powergrid/advancement/recipes/misc/crafting/neon_bulb.json
+2ea99e1c2160ba990597d8da5323aeb09e553c72 data/powergrid/advancement/recipes/misc/crafting/pentode.json
 06f02dffd0d60ede4d5b4eb030bff239ed7286c3 data/powergrid/advancement/recipes/misc/crafting/pins.json
 68c9264d9fa9a5c423e241f29a6e88c931d6f1e7 data/powergrid/advancement/recipes/misc/crafting/plotter.json
 32445aea7a7a0cf8fd67fe01dc8f30495865c022 data/powergrid/advancement/recipes/misc/crafting/portable_battery.json
@@ -63,6 +64,8 @@ bfdaab4618b6a35040b12dc0e06d0f2a4390e992 data/powergrid/advancement/recipes/misc
 b306ae10a83f517710da11e39c30aa38bcfbefee data/powergrid/advancement/recipes/misc/crafting/solar_panel_bearing.json
 5fed281749a9ff1b63073354ab908192f98d3458 data/powergrid/advancement/recipes/misc/crafting/spark_gap.json
 cf97f2881ca351ac189060a9acd87e06df062e5a data/powergrid/advancement/recipes/misc/crafting/thermometer.json
+74b0e57f2f7f390ea2efda6794616e25b2e7ba8f data/powergrid/advancement/recipes/misc/crafting/thyratron.json
+1295c73fc50a25b4298471a44dc3c8d7f2087ad8 data/powergrid/advancement/recipes/misc/crafting/triode.json
 242d718d166245e1316790d7147eb4f48ac71d6f data/powergrid/advancement/recipes/misc/crafting/variac.json
 3cbd157ba853fded8abbb9ea1cf7175fe56f05b5 data/powergrid/advancement/recipes/misc/crafting/varistor.json
 38a7ec7a079c0bcc7095d71ae5f59851da5806f5 data/powergrid/advancement/recipes/misc/crafting/vertical_generator_housing_from_conversion.json
@@ -114,6 +117,7 @@ dbf7780db7b91bc8dbf5b695026b930424a8175a data/powergrid/recipe/crafting/lv_light
 df51cf31c8bfbecf51b0cff0a7b945ac74e7e348 data/powergrid/recipe/crafting/multimeter.json
 968a0f93c5b5eb7439bb8babbbc8e08338937ca1 data/powergrid/recipe/crafting/mv_switch.json
 f6b6bfabcbb86cbe820e708a1b6115581701c1e8 data/powergrid/recipe/crafting/neon_bulb.json
+41bfbd85821f5e1b1678e5c0b1d439e3b24d79b7 data/powergrid/recipe/crafting/pentode.json
 75ac9f4cf3b5389e98ba0c037ba508be0fe357c3 data/powergrid/recipe/crafting/pins.json
 f2602ac2825ef9e3b1a163ca48efa1200629d7be data/powergrid/recipe/crafting/plotter.json
 88e190455e206abe57a32e59322e1d49d1d2c425 data/powergrid/recipe/crafting/portable_battery.json
@@ -134,6 +138,8 @@ b8b9e4ad95092107e63a1e4750942f9c4e67b3ee data/powergrid/recipe/crafting/servo.js
 1eb9c3aa456767b31fe4a44b3bd2a4ab7301d8b3 data/powergrid/recipe/crafting/solar_panel_bearing.json
 53d1bfca34b06d54a9312e5711dd3f4f9d526d40 data/powergrid/recipe/crafting/spark_gap.json
 97489d99cfe8ae878375020e7d63ff6f83e4e9ff data/powergrid/recipe/crafting/thermometer.json
+a4adeea6e006c52f6c574f7f6dd8be53117597b4 data/powergrid/recipe/crafting/thyratron.json
+34ee32a20c0496050ca968fc5aedc67505dcd34c data/powergrid/recipe/crafting/triode.json
 76d2290cce81ddf1d0a14d7fd6a1c23116a5f778 data/powergrid/recipe/crafting/variac.json
 7027682ae43dd044f3637f12d2335ca669476413 data/powergrid/recipe/crafting/varistor.json
 e8f743cfd12b83dcd8bcc4d8bfcca9220a3a7bca data/powergrid/recipe/crafting/vertical_generator_housing_from_conversion.json

@@ -1,4 +1,4 @@
-// 1.21.1	2026-08-15T23:12:42.514214234	Registrate Provider for powergrid [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (blocks), Tags (enchantments), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider, Component Item Mapping, Wire Item Mapping]
+// 1.21.1	2026-09-17T12:20:00.746844404	Registrate Provider for powergrid [Registries, Data Maps, Recipes, Advancements, Loot Tables, Tags (blocks), Tags (enchantments), Tags (items), Tags (fluids), Tags (entity_types), generic_server_provider, Blockstates, Item models, Lang (en_us/en_ud), generic_client_provider, Component Item Mapping, Wire Item Mapping]
 0351f64b4d3a52e893c19095ef365c6d91d51984 assets/powergrid/blockstates/acid.json
 3fccc8d4079e1736fe4b5d6533d32f1dfd7645cd assets/powergrid/blockstates/alarm_bell.json
 65f5028e579c949127e5ff40119c7518278d9145 assets/powergrid/blockstates/andesite_encased_crt.json
@@ -76,8 +76,8 @@ b99ce728e6e41cddc4f398f88fccf8b3952cf1ac assets/powergrid/blockstates/vertical_g
 e05070d6a54e71632547bb5709baff1a3978ed06 assets/powergrid/blockstates/voltage_gauge.json
 bd550c6b309ac5fa085a32f29c65a093fa6adede assets/powergrid/blockstates/winding.json
 ed23210ca824e2ddcb797afb070cfde07a354301 assets/powergrid/blockstates/wire_connector.json
-6e25bc8c9166e77379f0687fc3d84c1865030539 assets/powergrid/lang/en_ud.json
-81270a891e167e7d0043352d7d4d372d9a32b647 assets/powergrid/lang/en_us.json
+d779df82c557ed911637824c32c525006c121ec8 assets/powergrid/lang/en_ud.json
+c2079ffcc55e76441869c39a5ba272085676c6e4 assets/powergrid/lang/en_us.json
 dfaa19092446e8659e975df23bdcee24a51bda30 assets/powergrid/models/block/acid.json
 40e4b5bda65415f4d49c211c71a44df8606da6d1 assets/powergrid/models/block/battery.json
 cebbe270dd06237ec3199068093236261e15247b assets/powergrid/models/block/conductive_casing.json
@@ -167,6 +167,7 @@ e66cf252ed640398a41c5b176b8abcced51b0465 assets/powergrid/models/item/lv_light_b
 224a2ed30366b3295ec8158532c8bca32a58ab0f assets/powergrid/models/item/multimeter.json
 ea54bfc8b42339f295e0eeb81cf87f756e54dd2a assets/powergrid/models/item/mv_switch.json
 4ffad619d070cd820512b37c8a3035c0d18c17ca assets/powergrid/models/item/neon_bulb.json
+c27745fee2ce3af66562d0208fe28080844c00e1 assets/powergrid/models/item/pentode.json
 5e38e09a5f7eebc93f0077e5a7b99fcc1484c6e9 assets/powergrid/models/item/pins.json
 b2da73af10a8705c67e991aa573fe3a91da1c19a assets/powergrid/models/item/plotter.json
 e9701dbde7ba8bd3f8f10b0b258904e1628f2ae4 assets/powergrid/models/item/portable_battery.json
@@ -194,7 +195,9 @@ cd9db608a0d59a7b0144c7d4483ad8896cd568c7 assets/powergrid/models/item/socket.jso
 f5061e8e13fdfa7a6807813399174e6c0e78a566 assets/powergrid/models/item/spark_gap.json
 df6b632143095579ca051cc39f58736cc1091b28 assets/powergrid/models/item/string_light_cord.json
 56f9e0e0f2a8edd5ad7b5eeba96af1ea27702259 assets/powergrid/models/item/thermometer.json
+271206dee7c53fde481ccb433846545b4907bead assets/powergrid/models/item/thyratron.json
 de9d0ac0c44587023c1510176bdc40887d244c25 assets/powergrid/models/item/transformer_core.json
+13ad1f9adcb862fe8d70278d277b94a29ab3666d assets/powergrid/models/item/triode.json
 b71e95530c7e3258bd5273fe945a3d53e3bceea6 assets/powergrid/models/item/unetched_circuit.json
 fe7c0babd2d7c1e3545cdbb7419d3580dc1e0c60 assets/powergrid/models/item/variac.json
 2b30a79b42a1565b5587cb430e80315de85ee3c9 assets/powergrid/models/item/varistor.json
@@ -218,6 +221,10 @@ b03365caf1dc88ed09375c7bc4ced6d6946f5106 data/c/tags/item/wires/iron.json
 9f2bf1864b2c6938edd4d276b2824bce514f5cff data/create/tags/block/fan_transparent.json
 9be4c66120f7df668426d20c4574a17d41204455 data/minecraft/tags/block/mineable/axe.json
 53ce2be05c7d3dcc5d52171851c8039332e891d2 data/minecraft/tags/block/mineable/pickaxe.json
+2e13d532f43a5770ac73f4eda2cd25f02bec149d data/minecraft/tags/item/axes.json
+08e8002e2722feefb86e4f2d5cfe68c37353f1fb data/minecraft/tags/item/enchantable/durability.json
+fa6530f7510a355573493514aa17df381f696002 data/minecraft/tags/item/pickaxes.json
+396b429b22948f23594322542f4e507a909b8ac2 data/minecraft/tags/item/swords.json
 c3fa3fb400f298deb6c034dbfa7a82e59ebc688d data/powergrid/advancement/recipes/decorations/copper_plating_slab_from_copper_plating_stonecutting.json
 4c1fefcea48825c45b26ef14ca5611242cb6687a data/powergrid/advancement/recipes/decorations/copper_plating_stairs_from_copper_plating_stonecutting.json
 570081048b090ecc411a491d3a9984a87d7e3e5f data/powergrid/loot_table/blocks/alarm_bell.json
@@ -228,10 +235,10 @@ c3fa3fb400f298deb6c034dbfa7a82e59ebc688d data/powergrid/advancement/recipes/deco
 89c6cb92dcac8be00b16e49b82335beed38bc9e5 data/powergrid/loot_table/blocks/carbon_pile.json
 1d9619c429ece145c274831e9978a44550efb17f data/powergrid/loot_table/blocks/carbon_pile_coil.json
 4a67d9d7f081fe498f453cba627ebec5193f6734 data/powergrid/loot_table/blocks/ceiling_tile.json
-d036081bbe984f3b40c9d40a7b6198ef76a235e3 data/powergrid/loot_table/blocks/ceiling_tile_connector.json
-0b408311c16c3d5a41e5c44633b8fd2c7c4fef62 data/powergrid/loot_table/blocks/ceiling_tile_junction.json
-f413cbf068d7a17afbd4e4b108d7956e2b7679ea data/powergrid/loot_table/blocks/ceiling_tile_lamp.json
-1a919d4d8b4eb75c69529af0d0c3a2df1977a5c9 data/powergrid/loot_table/blocks/ceiling_tile_solar.json
+fb608817786633f24309834e376554802d33e2cc data/powergrid/loot_table/blocks/ceiling_tile_connector.json
+ffec5dd3c41991bea299953fa1820097c3f98270 data/powergrid/loot_table/blocks/ceiling_tile_junction.json
+389c2e1306515e44bb455a6bf1aa61dfa7bb0d23 data/powergrid/loot_table/blocks/ceiling_tile_lamp.json
+c3d502c200b929f9a75e11ffe523c54b5111b337 data/powergrid/loot_table/blocks/ceiling_tile_solar.json
 ea3c308db1ad906290321f0c1f7415a56f9617ef data/powergrid/loot_table/blocks/circuit_board.json
 a6b19bbf17cc8ea9401783d1b04f5de6cd77d845 data/powergrid/loot_table/blocks/circuit_design_table.json
 6caa2290c2f75944248762b4590424315a2583b9 data/powergrid/loot_table/blocks/conductive_casing.json
@@ -303,12 +310,12 @@ c140e369d9b824117a3f317e04475ff3946886b3 data/powergrid/powergrid/component_item
 c401e9f02333c5f1bf692f09893c6c26d6710515 data/powergrid/powergrid/component_items/current_gauge.json
 c3db81ca6b75a8075f208d0bdb665b3087b8c80e data/powergrid/powergrid/component_items/diode.json
 92e32e8be6e56d2f88573007fa317df540992677 data/powergrid/powergrid/component_items/display_module.json
-37f3edbdc0a110e00e1b412fbcd11f710dfb87ca data/powergrid/powergrid/component_items/electron_tube.json
 74adbc920aae60e8e7534dbbd282c730c0c11a65 data/powergrid/powergrid/component_items/fuse_holder.json
 84655c80f0d2b9e58bc1e8a3f01b9af604028de6 data/powergrid/powergrid/component_items/inductor.json
 6a2e6e24e8a17c171b03e6901907f8738eff8536 data/powergrid/powergrid/component_items/label.json
 62b459e3d80df11c27044b87d001a5092cbef3b9 data/powergrid/powergrid/component_items/light_bulb.json
 562863432c647098997bea8ca1d224b7c4c14e22 data/powergrid/powergrid/component_items/neon_bulb.json
+3da3f4af643546d9bfbb2419ab4b51e17de7ef15 data/powergrid/powergrid/component_items/pentode.json
 e25547d35114e20f4dd30cdc84cc6e58d5ab58e3 data/powergrid/powergrid/component_items/potentiometer.json
 917a1ec6a1895990d9ee6810e5711503cacd11ef data/powergrid/powergrid/component_items/redstone_relay.json
 14590b7130b4a0767ff37e06072c3cdac6ffb072 data/powergrid/powergrid/component_items/regulator_tube.json
@@ -316,6 +323,8 @@ e25547d35114e20f4dd30cdc84cc6e58d5ab58e3 data/powergrid/powergrid/component_item
 ecdc86cd2c7bb9d4cafeb165a8475a358a1da142 data/powergrid/powergrid/component_items/relay_dpdt.json
 f9b2f9db4c3f0eaebd78c45b1b61e5f9a1f4a8a8 data/powergrid/powergrid/component_items/resistor.json
 d405f7536dfbe5c18846fb5058670899a37fd55a data/powergrid/powergrid/component_items/switch.json
+428800854c590d10b976bb33eb58aedf6b81d343 data/powergrid/powergrid/component_items/thyratron.json
+fac2eda0b4add3d293e404ef1426a631d0b615d4 data/powergrid/powergrid/component_items/triode.json
 dfbce5feb001528af84aa32c05d7662a62bd6d3e data/powergrid/powergrid/component_items/varistor.json
 f455b6bde8767c7dac8dc0bd8edcb86ccd0a0006 data/powergrid/powergrid/component_items/vfet.json
 8d3ea7139bbec15eb31c7c84894eed4b3b5a5c12 data/powergrid/powergrid/component_items/via.json
@@ -331,7 +340,7 @@ c531d02b8556bb6e47bf4b7cde94a0b9f5f74aab data/powergrid/powergrid/wire_types/ins
 91d33352a52eae2987740026eeaaec5fbaaf2423 data/powergrid/recipe/copper_plating_stairs_from_copper_plating_stonecutting.json
 bbd279e70f370ad327958e0f1a93c638eb25c1a8 data/powergrid/tags/block/ignore_in_rotor_assembly_size.json
 fec9cb37d0be7656fff1945f12408ea917ca6a7c data/powergrid/tags/fluid/acid.json
-175108d9f149cf6490319bbc11dd47f8ab308a7e data/powergrid/tags/item/circuit_component.json
+111869ef96b172afb06469c9b0e055bb38ab79b3 data/powergrid/tags/item/circuit_component.json
 6609d602d76fc2384a1310c6ab47e25bf774271a data/powergrid/tags/item/circuit_schematic_holder.json
 b03365caf1dc88ed09375c7bc4ced6d6946f5106 data/powergrid/tags/item/fuse_resetting.json
 1c3be810daf04d905a409a4806c17cf60071d015 data/powergrid/tags/item/light_wires.json

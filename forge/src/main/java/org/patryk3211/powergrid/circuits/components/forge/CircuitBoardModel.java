@@ -48,6 +48,8 @@ import org.patryk3211.powergrid.circuits.components.properties.Orientation;
 import org.patryk3211.powergrid.circuits.schematic.Line;
 import org.patryk3211.powergrid.circuits.schematic.PlacedComponent;
 import org.patryk3211.powergrid.circuits.schematic.Point;
+import org.patryk3211.powergrid.circuits.schematic.Line.Clip;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,7 +197,12 @@ public class CircuitBoardModel implements BakedModel {
             if (data.has(FRONT_LAYER)) {
                 List<Line> lines = data.get(FRONT_LAYER);
                 for (var line : lines) {
-                    quads.add(emitTrace(line.vertical, line.position, line.start, line.end, line.shade));
+                    int start = line.sizeCut.getStart(line);
+                    int end = line.sizeCut.getEnd(line);
+                    if (line.sizeCut != Clip.NONE) {
+                        PowerGrid.LOGGER.info("Line cut from: "+line.start+"-"+line.end+", to: "+start+"-"+end);
+                    } else PowerGrid.LOGGER.info("Line uncut: "+start+"-"+end);
+                    quads.add(emitTrace(line.vertical, line.position, start, end, line.shade));
                 }
             }
             if (data.has(PADS)) {
